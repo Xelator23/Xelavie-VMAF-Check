@@ -12,6 +12,8 @@ Dies ist eine Vorabversion. Die erste stabile Veröffentlichung ist als `v0.1.0`
 
 ## Installation über uv (Windows und Linux)
 
+**uv oder Git noch nicht vorhanden?** → [uv und Git unter Windows und Linux installieren](UV_UND_GIT.md).
+
 **Voraussetzung: uv und Git sind bereits installiert und im PATH erreichbar.** Prüfen mit `uv --version` und `git --version`. Wir liefern uv nicht mit und installieren es nicht automatisch. Eine Veröffentlichung auf PyPI ist für diesen Weg nicht erforderlich.
 
 Direkt aus dem aktuellen Standardbranch installieren und starten:
