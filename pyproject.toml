@@ -1,0 +1,39 @@
+[build-system]
+requires = ["hatchling==1.27.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "xelavie-vmaf-check"
+version = "0.1.0.dev2"
+description = "Local VMAF video comparisons with CLI, browser UI and queue for Windows and Linux"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{name = "Xelator23"}]
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/Xelator23/Xelavie-VMAF-Check"
+Issues = "https://github.com/Xelator23/Xelavie-VMAF-Check/issues"
+
+[project.scripts]
+xelavie-vmaf-check = "xelavie_vmaf_check:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["xelavie_vmaf_check"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"vmaf_check.py" = "xelavie_vmaf_check/vmaf_check.py"
+"vmaf_launcher.py" = "xelavie_vmaf_check/vmaf_launcher.py"
+"vmaf_cli.py" = "xelavie_vmaf_check/vmaf_cli.py"
+"vmaf_library.py" = "xelavie_vmaf_check/vmaf_library.py"
+"vmaf_settings.py" = "xelavie_vmaf_check/vmaf_settings.py"
+"vmaf_ui.html" = "xelavie_vmaf_check/vmaf_ui.html"
+"vmaf_navigation.js" = "xelavie_vmaf_check/vmaf_navigation.js"
+"xelavie.png" = "xelavie_vmaf_check/xelavie.png"
+"download_windows.ps1" = "xelavie_vmaf_check/download_windows.ps1"
+"THIRD_PARTY_NOTICES.md" = "xelavie_vmaf_check/THIRD_PARTY_NOTICES.md"
+
+[tool.hatch.build.targets.sdist]
+include = ["/xelavie_vmaf_check", "/vmaf*.py", "/vmaf_ui.html", "/vmaf_navigation.js", "/xelavie.png", "/download_windows.ps1", "/README.md", "/LICENSE", "/THIRD_PARTY_NOTICES.md", "/pyproject.toml"]

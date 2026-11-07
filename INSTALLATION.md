@@ -1,82 +1,110 @@
-# Installation: herunterladen, prüfen, lokal starten
+# Installation: Portable oder uv
 
-Xelavie VMAF Check ist portabel. Es benötigt keinen Installer mit Administratorrechten und keinen Befehl wie `curl ... | bash` oder `irm ... | iex`.
+Beide Varianten verwenden dieselbe CLI, UI, Warteschlange und gespeicherte Konfiguration. uv wird **nicht mitgeliefert und nicht automatisch installiert**.
 
-Die Schritte sind getrennt: **Archiv herunterladen → SHA256 prüfen → entpacken → lokalen Starter aufrufen.** Dadurch kann heruntergeladener Skripttext nicht schon während des Downloads ausgeführt werden.
+- **Portable:** Python 3.10+ oder bereits installiertes uv im PATH erforderlich.
+- **uv-Paket:** uv muss bereits installiert sein. Prüfen mit `uv --version`.
 
-## 1. Passendes Paket herunterladen
+## 1. Dateien herunterladen
 
-Öffne das [Nightly-Release](https://github.com/Xelator23/Xelavie-VMAF-Check/releases/tag/nightly) im Browser und speichere das Windows-ZIP oder Linux-TAR.GZ in einem neuen, leeren Ordner. Verwende die Release-Pakete, nicht die automatisch von GitHub angebotenen „Source code“-Archive für die folgenden Prüfsummen.
+Öffne [Release 0.1.0-nightly.2](https://github.com/Xelator23/Xelavie-VMAF-Check/releases/tag/v0.1.0-nightly.2) und lade `SHA256SUMS.txt` sowie eines dieser Pakete in einen neuen, leeren Ordner:
 
-Die folgenden **festen Referenzhashes gelten ausschließlich für `0.1.0-nightly.1`**, veröffentlicht am 7. November 2026:
-
-| Paket | SHA256 |
+| Variante | Datei |
 | --- | --- |
-| Windows ZIP | `0c8c151ad54c35f486375d39bd9ff6db687cd95b32c36e4dcaca0c7057e79cd5` |
-| Linux TAR.GZ | `92dabc4b13af93b4d7426265418bd849401b1cfbb9abb5781e8ef1cd316b07b1` |
+| Windows portable | `Xelavie-VMAF-Check-0.1.0-nightly.2-Windows.zip` |
+| Linux portable | `Xelavie-VMAF-Check-0.1.0-nightly.2-Linux.tar.gz` |
+| uv für Windows und Linux | `xelavie_vmaf_check-0.1.0.dev2-py3-none-any.whl` |
 
-Bei einer Abweichung **nicht starten**. Der Tag `nightly` kann später einen anderen Stand bezeichnen; ein anderes Paket braucht seinen eigenen, geprüften Referenzhash.
+Die automatisch von GitHub angebotenen „Source code“-Archive sind andere Dateien. Diese Anleitung verwendet die ausdrücklich aufgeführten Release-Pakete. Es wird kein heruntergeladener Skripttext direkt an eine Shell weitergereicht.
 
-## 2. Windows: prüfen und entpacken
+## 2. Prüfsumme kontrollieren
 
-Öffne PowerShell in dem Ordner mit dem heruntergeladenen ZIP. Dieser Block führt die Anwendung noch nicht aus:
+### Windows / PowerShell
 
-```powershell
-$ErrorActionPreference = 'Stop'
-$archive = '.\Xelavie-VMAF-Check-0.1.0-nightly.1-Windows.zip'
-$expected = '0c8c151ad54c35f486375d39bd9ff6db687cd95b32c36e4dcaca0c7057e79cd5'
-$actual = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant()
-if ($actual -ne $expected) {
-    throw 'SHA256 stimmt nicht. Paket nicht ausführen.'
-}
-Expand-Archive -LiteralPath $archive -DestinationPath '.\geprueft'
-Write-Host 'SHA256 stimmt. Paket nach .\geprueft entpackt.'
-```
-
-Danach kannst du die Dateien ansehen und den lokalen Starter getrennt aufrufen:
+Setze `$package` auf genau die heruntergeladene Datei (ZIP oder Wheel):
 
 ```powershell
-.\geprueft\Xelavie-VMAF-Check\vmaf-check.cmd
+$package = 'Xelavie-VMAF-Check-0.1.0-nightly.2-Windows.zip'
+$entries = @(Get-Content -LiteralPath '.\SHA256SUMS.txt' | Where-Object { $_ -match ('^[0-9a-f]{64}  ' + [regex]::Escape($package) + '$') })
+if ($entries.Count -ne 1) { throw 'Keine eindeutige SHA256 für dieses Paket.' }
+$expected = $entries[0].Substring(0,64)
+$actual = (Get-FileHash -LiteralPath $package -Algorithm SHA256).Hash.ToLowerInvariant()
+if ($actual -ne $expected) { throw 'SHA256 stimmt nicht. Paket nicht ausführen.' }
+Write-Host 'SHA256 stimmt.'
 ```
 
-## 3. Linux: prüfen und entpacken
+### Linux
 
-Öffne ein Terminal im Ordner mit dem heruntergeladenen TAR.GZ. Dieser Block läuft in einer Subshell und entpackt ausschließlich bei passender Prüfsumme:
+Setze `package` auf die heruntergeladene Datei (TAR.GZ oder Wheel):
 
 ```sh
 (
-    set -eu
-    archive='Xelavie-VMAF-Check-0.1.0-nightly.1-Linux.tar.gz'
-    expected='92dabc4b13af93b4d7426265418bd849401b1cfbb9abb5781e8ef1cd316b07b1'
-    actual=$(sha256sum -- "$archive")
-    if [ "${actual%% *}" != "$expected" ]; then
-        printf '%s\n' 'SHA256 stimmt nicht. Paket nicht ausführen.' >&2
-        exit 1
-    fi
-    mkdir geprueft
-    tar -xzf "$archive" -C geprueft
-    printf '%s\n' 'SHA256 stimmt. Paket nach ./geprueft entpackt.'
+  set -eu
+  package='Xelavie-VMAF-Check-0.1.0-nightly.2-Linux.tar.gz'
+  expected=$(awk -v file="$package" '$2 == file {print $1}' SHA256SUMS.txt)
+  [ "${#expected}" -eq 64 ] || { echo 'Keine eindeutige SHA256 für dieses Paket.' >&2; exit 1; }
+  printf '%s  %s\n' "$expected" "$package" | sha256sum --check -
 )
 ```
 
-Danach kannst du die Dateien ansehen und den lokalen Starter getrennt aufrufen:
+**Nur nach erfolgreicher Prüfung fortfahren.**
 
-```sh
-sh ./geprueft/Xelavie-VMAF-Check/vmaf-check.sh
+## 3a. Portable starten
+
+Windows:
+
+```powershell
+Expand-Archive -LiteralPath '.\Xelavie-VMAF-Check-0.1.0-nightly.2-Windows.zip' -DestinationPath '.\geprueft'
+.\geprueft\Xelavie-VMAF-Check\vmaf-check.cmd
 ```
 
-Kein `sudo` nötig. Existiert `geprueft` bereits, verwende für diese Anleitung einen neuen, leeren Downloadordner.
+Linux:
+
+```sh
+mkdir geprueft && tar -xzf Xelavie-VMAF-Check-0.1.0-nightly.2-Linux.tar.gz -C geprueft && sh ./geprueft/Xelavie-VMAF-Check/vmaf-check.sh
+```
+
+Fehlt Python, darf nur vorhandenes uv Python beschaffen. Fehlen beide Voraussetzungen, zeigt der Starter einen Hinweis und beendet sich.
+
+## 3b. Mit vorhandenem uv installieren
+
+Nach erfolgreicher Prüfung des **Wheels** unter Windows oder Linux:
+
+```sh
+uv tool install --python 3.12 ./xelavie_vmaf_check-0.1.0.dev2-py3-none-any.whl
+xelavie-vmaf-check
+```
+
+Der Start bietet die gewohnte Auswahl CLI/UI. `xelavie-vmaf-check --ui` und `xelavie-vmaf-check --cli` starten die jeweilige Oberfläche direkt. Falls der Befehl nicht gefunden wird, `uv tool update-shell` ausführen und ein neues Terminal öffnen.
+
+Die Python-Paketversion `0.1.0.dev2` entspricht `0.1.0-nightly.2`. Es gibt aktuell **keine Veröffentlichung auf PyPI**; der Installationsbefehl benötigt deshalb den Pfad zur Wheel-Datei.
+
+### Updates und Deinstallation
+
+Laufende Prüfungen und UI vorher beenden. Neues Wheel und zugehörige Prüfsummen aus dem gewünschten Release herunterladen, prüfen, anschließend (DATEINAME ersetzen):
+
+```sh
+uv tool install --reinstall --python 3.12 ./DATEINAME.whl
+```
+
+`uv tool upgrade xelavie-vmaf-check` ist für diese lokale Wheel-Installation nicht der Updateweg. Zur Deinstallation:
+
+```sh
+uv tool uninstall xelavie-vmaf-check
+```
+
+Einstellungen, Warteschlange und Ergebnisdateien bleiben erhalten. Beide Installationsvarianten nutzen dieselben Benutzer-Einstellungen; nicht gleichzeitig mit derselben Warteschlange starten. Portable Updates werden in einen neuen Programmordner entpackt.
 
 ## Was passiert beim Start?
 
 Die vorhandene Komfortfunktion zum Nachladen bleibt erhalten:
 
-- **Python:** Vorhandenes Python 3.10+ wird bevorzugt. Fehlt es, lädt der Starter ein uv-Archiv einer festgelegten Version, prüft dessen im Starter hinterlegten SHA256 und entpackt es erst danach. uv beschafft anschließend Python. Es wird kein aus dem Netz geladener Shell-Skriptstrom ausgeführt.
+- **Python/uv:** Die portable Variante bevorzugt Python 3.10+. Fehlt Python, darf der Starter nur ein bereits installiertes uv verwenden. uv kann dann Python 3.12 in seinen Benutzerverzeichnissen beschaffen. Fehlen beide, endet der Start mit einem verständlichen Hinweis. **uv selbst wird nie automatisch installiert oder heruntergeladen.**
 - **FFmpeg/FFprobe und dovi_tool:** Archive werden über HTTPS geladen, gegen den SHA256-Digest der GitHub-Release-Metadaten geprüft und danach entpackt.
 - **VMAF-Modelle:** JSON-Dateien werden über HTTPS geladen. Ihr Hash wird protokolliert; er wird derzeit nicht gegen einen fest eingebauten erwarteten Modellhash geprüft.
 - Die HTTPS-Zertifikatsprüfung bleibt aktiviert. Systemtreiber werden nicht installiert.
 
-Eine Prüfsumme ist **keine digitale Herausgebersignatur**. Wenn Archiv und Referenzhash aus derselben kompromittierten Quelle kommen, genügt dieser Vergleich nicht als Schutz. Die festen Hashes oben verhindern auch nicht, dass ein bereits verändertes README falsche Hashes liefert. GitHub-Konto und Upstream-Projekte bleiben Teil der Vertrauenskette.
+Eine Prüfsumme ist **keine digitale Herausgebersignatur**. Wenn Archiv und Referenzhash aus derselben kompromittierten Quelle kommen, genügt dieser Vergleich nicht als Schutz. GitHub-Konto und Upstream-Projekte bleiben Teil der Vertrauenskette.
 
 ## Optional: ohne automatische Downloads
 

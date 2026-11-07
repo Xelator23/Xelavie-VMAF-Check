@@ -1,4 +1,4 @@
-XELAVIE VMAF CHECK 0.1.0-nightly.1
+XELAVIE VMAF CHECK 0.1.0-nightly.2
 
 Start, UI, CLI-Navigation und Beispielbilder: siehe README.md.
 Dies ist eine Vorabversion. Echte HDR-/HLG-/DV-Videolaeufe sind noch
@@ -172,11 +172,12 @@ seiner PQ-Bilder bewertet, nicht hinsichtlich der dynamischen Wiedergabe.
 Fehlende Farbmetadaten werden nicht geraten. Querformat, quadratische
 Pixel und progressive Bilder sind Voraussetzung.
 
-ALLES PORTABEL NACHLADEN
-Die Starter suchen zuerst Python >=3.10. Fehlt es, laden sie uv 0.13.7
-mit im Starter festgelegter SHA256 herunter. uv beschafft Python 3.12
-aus Astrals python-build-standalone. Beide liegen nur im Temp-Ordner.
-Keine dauerhafte Python-Installation und keine PATH-Aenderung.
+VORAUSSETZUNGEN UND WERKZEUGDOWNLOADS
+Portable: Python >=3.10 oder bereits installiertes uv im PATH.
+uv-Installation: Bereits installiertes uv im PATH erforderlich.
+uv wird weder mitgeliefert noch automatisch heruntergeladen/installiert.
+Fehlt Python, kann vorhandenes uv Python 3.12 beschaffen und verwalten.
+Python und Cache liegen dabei in den normalen uv-Benutzerverzeichnissen.
 
 Das Python-Script sucht FFmpeg/FFprobe. Fehlende Programme oder benoetigte
 Filter loesen automatisch den Download des aktuellen portablen statischen
@@ -211,8 +212,7 @@ Systemtreiber/Kernel-Komponenten werden nicht automatisch installiert.
 SDR, HDR10 und HLG verwenden in dieser Pipeline CPU-Filter.
 
 Windows: PowerShell 5.1+ und normales HTTPS-Vertrauen sind erforderlich.
-Linux: Shell, tar, sha256sum, mktemp sowie curl ODER wget sind noetig,
-falls Python fehlt. Diese Standard-Systemwerkzeuge werden vorausgesetzt.
+Linux: Shell und Python >=3.10 oder bereits installiertes uv erforderlich.
 Auto-Downloads fuer x64/ARM64. Das FFmpeg-Linux-Paket setzt eine passende
 glibc voraus; Alpine/musl ist kein zugesichertes Komplettziel.
 Internet und genuegend Temp-Speicher fuer Programme werden benoetigt;
@@ -222,14 +222,14 @@ FFmpeg-Archive werden gegen den GitHub-Release-SHA256-Digest geprueft.
 Modell-SHA256 wird protokolliert (keine separate Signaturpruefung).
 Download-Dateien werden am Ende/bei normalen Fehlern entfernt. Bei
 Stromausfall oder hartem Prozessabbruch koennen Temp-Ordner zurueckbleiben.
---temp-dir setzt den Arbeitsordner des Python-Scripts; der vorgeschaltete
-Python-Bootstrap verwendet System-Temp (Linux: TMPDIR).
+--temp-dir setzt den Arbeitsordner der Pruefung. Eine von vorhandenem uv
+verwaltete Python-Laufzeit liegt separat im uv-Benutzerverzeichnis.
 
 --no-download verbietet auch dem Starter Downloads. Dann muessen Python,
 FFmpeg, FFprobe und --model DATEI.json lokal vorliegen.
 --download-tools erzwingt ein frisches FFmpeg-Paket.
 Ein direkter Aufruf von vmaf_check.py setzt vorhandenes Python voraus;
-zum automatischen Python-Download die .cmd/.sh-Datei verwenden.
+zum Python-Download ueber vorhandenes uv die .cmd/.sh-Datei verwenden.
 
 ZEITLICHE AUSRICHTUNG
 Identische Schnittfassung, gleicher Startframe, gleiche konstante

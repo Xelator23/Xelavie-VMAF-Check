@@ -6,8 +6,12 @@ import re
 from pathlib import Path
 import shutil
 import sys
-from vmaf_settings import config_path
-from vmaf_library import atomic_json
+if __package__:
+    from .vmaf_settings import config_path
+    from .vmaf_library import atomic_json
+else:
+    from vmaf_settings import config_path
+    from vmaf_library import atomic_json
 
 
 def clean_path(value):

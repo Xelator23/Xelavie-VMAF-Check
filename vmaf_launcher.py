@@ -12,8 +12,12 @@ import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlsplit, parse_qs
 import webbrowser
-from vmaf_settings import work_directory, save_work_directory
-from vmaf_library import Queue, statistics
+if __package__:
+    from .vmaf_settings import work_directory, save_work_directory
+    from .vmaf_library import Queue, statistics
+else:
+    from vmaf_settings import work_directory, save_work_directory
+    from vmaf_library import Queue, statistics
 
 HERE = Path(__file__).resolve().parent
 ENGINE = HERE / 'vmaf_check.py'
@@ -295,7 +299,10 @@ def ui():
 
 
 def cli():
-    from vmaf_cli import collect_inputs
+    if __package__:
+        from .vmaf_cli import collect_inputs
+    else:
+        from vmaf_cli import collect_inputs
     data=collect_inputs()
     cmd=build_command(data)
     print('Farbmodus Original:',data['ref-color'] or 'Automatisch','| Encode:',data['enc-color'] or 'Automatisch')

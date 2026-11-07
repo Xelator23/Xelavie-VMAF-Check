@@ -12,6 +12,7 @@ def build(destination):
     destination=Path(destination);destination.mkdir(parents=True,exist_ok=True)
     common=[p for p in root.iterdir() if p.is_file() and (p.suffix in ('.py','.html','.js','.png','.md','.txt') or p.name=='LICENSE')]
     common+=sorted((root/'docs').rglob('*.png'))
+    common += [root/'pyproject.toml', root/'xelavie_vmaf_check'/'__init__.py']
     windows=common+[root/name for name in ('vmaf-check.cmd','vmaf-check.ps1','download_windows.ps1')]
     linux=common+[root/'vmaf-check.sh',root/'download_windows.ps1']
     # The Windows helper is referenced by a cross-platform unit test; harmless on Linux.
@@ -33,7 +34,9 @@ def build(destination):
         assert archive.getmember(prefix+'/vmaf-check.sh').mode==0o755
         for member in archive:
             assert member.isfile() and member.name.startswith(prefix+'/') and '..' not in Path(member.name).parts
-    checksums=''.join(hashlib.sha256(file.read_bytes()).hexdigest()+'  '+file.name+'\n' for file in (win,lin))
+    wheel = destination / ('xelavie_vmaf_check-' + __version__.replace('-nightly.', '.dev') + '-py3-none-any.whl')
+    artifacts = [win, lin] + ([wheel] if wheel.is_file() else [])
+    checksums=''.join(hashlib.sha256(file.read_bytes()).hexdigest()+'  '+file.name+'\n' for file in artifacts)
     (destination/'SHA256SUMS.txt').write_text(checksums,encoding='utf-8')
     print(checksums,end='')
 

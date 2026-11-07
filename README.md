@@ -6,22 +6,40 @@
 
 Vergleiche einen Encode mit seiner Originaldatei über den gesamten Film. Xelavie VMAF Check organisiert FFmpeg, Modelle, Crop-Erkennung und Ergebnisberichte. Deine Videos bleiben auf deinem Rechner.
 
-**Aktueller Stand: `0.1.0-nightly.1` · Release-Kanal: `nightly` · MIT-Lizenz**
+**Aktueller Stand: `0.1.0-nightly.2` · Release-Kanal: `nightly` · MIT-Lizenz**
 
 Dies ist eine Vorabversion. Die erste stabile Veröffentlichung ist als `v0.1.0` vorgesehen. Echte SDR-Prüfungen unter Windows wurden durchgeführt; vollständige HDR-/HLG-/Dolby-Vision-Videoläufe sind noch nicht validiert.
 
 ## Download
 
-Unter [Releases](https://github.com/Xelator23/Xelavie-VMAF-Check/releases/tag/nightly) stehen getrennte Pakete bereit:
+Unter [Releases](https://github.com/Xelator23/Xelavie-VMAF-Check/releases/tag/v0.1.0-nightly.2) stehen getrennte Pakete bereit:
 
 | System | Download | Start |
 | --- | --- | --- |
-| Windows | `Xelavie-VMAF-Check-0.1.0-nightly.1-Windows.zip` | `vmaf-check.cmd` |
-| Linux | `Xelavie-VMAF-Check-0.1.0-nightly.1-Linux.tar.gz` | `sh ./vmaf-check.sh` |
+| Windows | `Xelavie-VMAF-Check-0.1.0-nightly.2-Windows.zip` | `vmaf-check.cmd` |
+| Linux | `Xelavie-VMAF-Check-0.1.0-nightly.2-Linux.tar.gz` | `sh ./vmaf-check.sh` |
+| uv (Windows & Linux) | `xelavie_vmaf_check-0.1.0.dev2-py3-none-any.whl` | `xelavie-vmaf-check` |
 
 **Empfohlen: [Paket herunterladen, SHA256 prüfen und erst danach lokal starten](INSTALLATION.md).** Kein `curl | bash`, kein `irm | iex` und keine Administratorrechte für das portable Paket.
 
 Die Pakete enthalten denselben Python-Prüfcode und dieselbe UI, jeweils mit dem passenden Starter. SHA256-Prüfsummen stehen im Release. FFmpeg und Modelle werden bei Bedarf separat heruntergeladen; Treiber werden nicht installiert.
+
+### Installation über vorhandenes uv
+
+**Voraussetzung: uv ist bereits installiert und über `uv --version` erreichbar.** Wir liefern uv nicht mit und installieren es nicht automatisch. Die portable Variante benötigt stattdessen Python 3.10+ oder vorhandenes uv.
+
+Lade das Wheel und `SHA256SUMS.txt` aus demselben Release herunter und prüfe das Paket gemäß [Installationsanleitung](INSTALLATION.md). Danach:
+
+```sh
+uv tool install --python 3.12 ./xelavie_vmaf_check-0.1.0.dev2-py3-none-any.whl
+xelavie-vmaf-check
+```
+
+Bei Bedarf zeigt `uv tool update-shell`, wie der Befehlsordner in deinen PATH aufgenommen wird; danach das Terminal neu öffnen. Direkter UI-/CLI-Start: `xelavie-vmaf-check --ui` beziehungsweise `xelavie-vmaf-check --cli`.
+
+Updates: neues Wheel herunterladen, prüfen und mit `uv tool install --reinstall --python 3.12 ./DATEINAME.whl` installieren. Beende vorher laufende Prüfungen und die UI. Deinstallation: `uv tool uninstall xelavie-vmaf-check`. Gespeicherte Einstellungen und Ergebnisse bleiben in ihren bisherigen Benutzer-/Arbeitsordnern.
+
+Das Paket wird über GitHub verteilt, **noch nicht über PyPI**. Daher derzeit nicht einfach `uv tool install xelavie-vmaf-check` oder `uv tool upgrade xelavie-vmaf-check` verwenden. `0.1.0.dev2` ist die Python-Paketbezeichnung für `0.1.0-nightly.2`. uv kann bei Bedarf die angeforderte Python-Version beschaffen; FFmpeg und Modelle lädt weiterhin die Anwendung.
 
 ## Funktionen
 
@@ -79,7 +97,7 @@ Direkter Start mit bekannten BT.709-Limited-Quellen:
 ### Linux
 
 ```sh
-tar -xzf Xelavie-VMAF-Check-0.1.0-nightly.1-Linux.tar.gz
+tar -xzf Xelavie-VMAF-Check-0.1.0-nightly.2-Linux.tar.gz
 cd Xelavie-VMAF-Check
 sh ./vmaf-check.sh
 ```
@@ -131,7 +149,7 @@ Details zu Crop, Modellen, Farb-Overrides, Dolby-Vision-Modi und Offline-Betrieb
 
 Windows benötigt PowerShell 5.1+. Linux benötigt eine passende glibc; Alpine/musl ist kein zugesichertes Ziel. Die automatischen Werkzeugdownloads berücksichtigen x64/ARM64, wobei die Verfügbarkeit passender Upstream-Builds entscheidend bleibt.
 
-Fehlt Python 3.10+, können die Starter temporär uv/Python herunterladen. Unter Linux werden dafür `curl` oder `wget`, `tar`, `sha256sum` und `mktemp` benötigt. Dieser vorgeschaltete Bootstrap verwendet **System-Temp** (Linux: `TMPDIR`); die eigentlichen Video-Arbeitsdateien verwenden den gewählten Arbeitsordner.
+Die portablen Starter benötigen Python 3.10+ oder bereits installiertes `uv` im PATH. **uv wird weder mitgeliefert noch automatisch installiert.** Fehlt Python, kann vorhandenes uv Python 3.12 beschaffen; diese Laufzeit und ihr Cache liegen in den normalen uv-Benutzerverzeichnissen. Die Video-Arbeitsdateien verwenden weiterhin deinen gewählten Arbeitsordner.
 
 FFmpeg/FFprobe, VMAF-Modelle und bei Bedarf `dovi_tool` werden automatisch geladen. HTTPS-Zertifikatsprüfung bleibt aktiv. Bei `--no-download` müssen alle benötigten Werkzeuge und das mit `--model` gewählte Modell lokal vorhanden sein. `--download-tools` erzwingt einen frischen FFmpeg-Build. Unterschiedliche Builds können Verhalten und Ergebnisse beeinflussen; Versionen und Modellhash werden protokolliert.
 

@@ -16,7 +16,10 @@ import subprocess
 import sys
 import time
 from datetime import datetime
-from vmaf_settings import work_directory, save_work_directory
+if __package__:
+    from .vmaf_settings import work_directory, save_work_directory
+else:
+    from vmaf_settings import work_directory, save_work_directory
 import tarfile
 import tempfile
 import urllib.request
@@ -24,7 +27,7 @@ import urllib.error
 import zipfile
 from fractions import Fraction
 
-__version__ = '0.1.0-nightly.1'
+__version__ = '0.1.0-nightly.2'
 
 COLOR_FIELDS = {'primaries':'color_primaries', 'transfer':'color_transfer',
                 'matrix':'color_space', 'range':'color_range'}

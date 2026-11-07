@@ -10,7 +10,7 @@ Die MIT-Lizenz dieses Repositorys gilt für den Xelavie-VMAF-Check-Projektcode. 
 | [dovi_tool](https://github.com/quietvoid/dovi_tool) | Dolby-Vision-Vorbereitung; Upstream-Lizenz beachten. |
 | [libplacebo](https://code.videolan.org/videolan/libplacebo) | HDR-/DV-Verarbeitung innerhalb geeigneter FFmpeg-Builds. |
 | [zimg](https://github.com/sekrit-twc/zimg) | Farbkonvertierung innerhalb geeigneter FFmpeg-Builds. |
-| [uv](https://github.com/astral-sh/uv) | Optionaler Python-Bootstrap. |
+| [uv](https://github.com/astral-sh/uv) | Voraussetzung für die uv-Installation; optional vorhandenes Werkzeug für die portable Variante. Wird nicht mitgeliefert oder automatisch installiert. |
 | [Python](https://www.python.org/psf/license/) / [python-build-standalone](https://github.com/astral-sh/python-build-standalone) | Optional heruntergeladene Laufzeit. |
 
 Für eine eigene Weiterverteilung dieser Komponenten gelten deren jeweilige Lizenz- und Quellenhinweise. Produkt- und Projektnamen bezeichnen die jeweiligen unabhängigen Projekte und implizieren keine Verbindung oder Zertifizierung.

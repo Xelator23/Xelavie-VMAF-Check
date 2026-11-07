@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.0-nightly.2
+
+- Portable Windows-/Linux-Pakete und zusätzlich ein installierbares Python-Wheel für uv.
+- Gemeinsamer Befehl `xelavie-vmaf-check` mit derselben CLI, UI und gespeicherten Konfiguration.
+- uv muss bereits installiert sein; kein automatischer uv-Download mehr, auch in den portablen Startern.
+- Portable Starter nutzen Python 3.10+ oder vorhandenes uv für Python 3.12.
+- Wheel mit UI-Dateien und Windows-Downloadhelfer; Installation wird unter Windows und Linux getestet.
+- Python-Paketversion `0.1.0.dev2` entspricht der angezeigten Version `0.1.0-nightly.2`.
+
 ## 0.1.0-nightly.1
 
 Erste öffentliche Vorabversion, veröffentlicht unter dem Tag `nightly`.

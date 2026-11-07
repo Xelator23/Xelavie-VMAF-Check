@@ -7,7 +7,10 @@ from pathlib import Path
 import tempfile
 import threading
 import uuid
-from vmaf_settings import config_path, work_directory
+if __package__:
+    from .vmaf_settings import config_path, work_directory
+else:
+    from vmaf_settings import config_path, work_directory
 
 
 def atomic_json(path, data):
