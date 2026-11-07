@@ -1,11 +1,47 @@
-# Installation: Portable oder uv
+# Installation: uv direkt aus GitHub oder Portable
 
 Beide Varianten verwenden dieselbe CLI, UI, Warteschlange und gespeicherte Konfiguration. uv wird **nicht mitgeliefert und nicht automatisch installiert**.
 
 - **Portable:** Python 3.10+ oder bereits installiertes uv im PATH erforderlich.
-- **uv-Paket:** uv muss bereits installiert sein. Prüfen mit `uv --version`.
+- **uv direkt aus GitHub:** uv und Git müssen bereits installiert sein. Prüfen mit `uv --version` und `git --version`.
+- **Optionales Wheel:** Bereits installiertes uv erforderlich; Git wird dafür nicht benötigt.
 
-## 1. Dateien herunterladen
+## Installation über uv (Windows und Linux)
+
+**Voraussetzung: uv und Git sind bereits installiert und im PATH erreichbar.** Prüfen mit `uv --version` und `git --version`. Wir liefern uv nicht mit und installieren es nicht automatisch. Eine Veröffentlichung auf PyPI ist für diesen Weg nicht erforderlich.
+
+Direkt aus dem aktuellen Standardbranch installieren und starten:
+
+```sh
+uv tool install git+https://github.com/Xelator23/Xelavie-VMAF-Check.git
+xelavie-vmaf-check
+```
+
+Ohne Versionszusatz wird der aktuelle Entwicklungsstand installiert. Für die konkret veröffentlichte Nightly stattdessen:
+
+```sh
+uv tool install "git+https://github.com/Xelator23/Xelavie-VMAF-Check.git@v0.1.0-nightly.2"
+```
+
+uv richtet eine eigene Python-Umgebung ein und kann bei Bedarf eine passende Python-Version beschaffen. Falls der Startbefehl nicht gefunden wird: `uv tool update-shell` ausführen und das Terminal neu öffnen. Direkter Start: `xelavie-vmaf-check --ui` oder `xelavie-vmaf-check --cli`.
+
+### Updates
+
+Beende vorher laufende Prüfungen und die UI. Für den neuesten Stand des Standardbranches:
+
+```sh
+uv tool install --reinstall --refresh git+https://github.com/Xelator23/Xelavie-VMAF-Check.git
+```
+
+Bei einer Installation über einen Versionstag bleibst du auf diesem Stand. Um auf ein anderes Release zu wechseln, `--reinstall` verwenden und den gewünschten Tag hinter `@` angeben. Der Befehl ohne Tag wechselt zum aktuellen Entwicklungsstand.
+
+Deinstallation: `uv tool uninstall xelavie-vmaf-check`. Einstellungen und Ergebnisse bleiben in ihren Benutzer-/Arbeitsordnern erhalten.
+
+## Alternative: Portable oder Wheel herunterladen
+
+Die folgenden Download- und Prüfsummenschritte gelten für die Release-Pakete. Für die oben beschriebene Git-Installation ist kein manueller Archiv- oder Wheel-Download nötig.
+
+### 1. Dateien herunterladen
 
 Öffne [Release 0.1.0-nightly.2](https://github.com/Xelator23/Xelavie-VMAF-Check/releases/tag/v0.1.0-nightly.2) und lade `SHA256SUMS.txt` sowie eines dieser Pakete in einen neuen, leeren Ordner:
 
@@ -17,7 +53,7 @@ Beide Varianten verwenden dieselbe CLI, UI, Warteschlange und gespeicherte Konfi
 
 Die automatisch von GitHub angebotenen „Source code“-Archive sind andere Dateien. Diese Anleitung verwendet die ausdrücklich aufgeführten Release-Pakete. Es wird kein heruntergeladener Skripttext direkt an eine Shell weitergereicht.
 
-## 2. Prüfsumme kontrollieren
+### 2. Prüfsumme kontrollieren
 
 ### Windows / PowerShell
 
@@ -49,7 +85,7 @@ Setze `package` auf die heruntergeladene Datei (TAR.GZ oder Wheel):
 
 **Nur nach erfolgreicher Prüfung fortfahren.**
 
-## 3a. Portable starten
+### 3a. Portable starten
 
 Windows:
 
@@ -66,7 +102,7 @@ mkdir geprueft && tar -xzf Xelavie-VMAF-Check-0.1.0-nightly.2-Linux.tar.gz -C ge
 
 Fehlt Python, darf nur vorhandenes uv Python beschaffen. Fehlen beide Voraussetzungen, zeigt der Starter einen Hinweis und beendet sich.
 
-## 3b. Mit vorhandenem uv installieren
+### 3b. Optionales Wheel mit vorhandenem uv installieren
 
 Nach erfolgreicher Prüfung des **Wheels** unter Windows oder Linux:
 
@@ -77,9 +113,9 @@ xelavie-vmaf-check
 
 Der Start bietet die gewohnte Auswahl CLI/UI. `xelavie-vmaf-check --ui` und `xelavie-vmaf-check --cli` starten die jeweilige Oberfläche direkt. Falls der Befehl nicht gefunden wird, `uv tool update-shell` ausführen und ein neues Terminal öffnen.
 
-Die Python-Paketversion `0.1.0.dev2` entspricht `0.1.0-nightly.2`. Es gibt aktuell **keine Veröffentlichung auf PyPI**; der Installationsbefehl benötigt deshalb den Pfad zur Wheel-Datei.
+Die Python-Paketversion `0.1.0.dev2` entspricht `0.1.0-nightly.2`. Es gibt aktuell **keine Veröffentlichung auf PyPI**. Bei dieser optionalen Variante wird der Pfad zur Wheel-Datei verwendet; alternativ ist die direkte GitHub-Installation oben möglich.
 
-### Updates und Deinstallation
+### Updates der Downloadpakete und Deinstallation
 
 Laufende Prüfungen und UI vorher beenden. Neues Wheel und zugehörige Prüfsummen aus dem gewünschten Release herunterladen, prüfen, anschließend (DATEINAME ersetzen):
 
