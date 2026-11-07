@@ -1,6 +1,6 @@
 # Commands
 
-Alle CLI-Argumente für **Xelavie VMAF Check 0.1.0-nightly.3**. Die CLI wird über Dateipfade und Flags bedient; ohne Argumente erscheint die Hilfe. Es gibt keine interaktiven Rückfragen.
+Alle CLI-Argumente für **Xelavie VMAF Check 0.1.0-nightly.4**. Die CLI wird über Dateipfade und Flags bedient; ohne Argumente erscheint die Hilfe. Es gibt keine interaktiven Rückfragen.
 
 [Start und Hilfe](#start-und-hilfe) · [Prüfung](#prüfung) · [Crop](#crop) · [Farbangaben](#farbangaben) · [Dolby Vision](#dolby-vision) · [Programme und Modelle](#programme-und-modelle) · [Ordner](#ordner) · [Beispiele](#beispiele)
 
@@ -27,6 +27,8 @@ Für portable Pakete ersetzt du nur den Programmnamen:
 | Python direkt | `python vmaf_launcher.py ORIGINAL ENCODE [OPTIONEN]`; unter Linux gegebenenfalls `python3` |
 
 ## Start und Hilfe
+
+Der Launcher zeigt beim CLI-Start ein Banner mit automatisch übernommener Programmversion. Bei schmalen Terminals, nicht unterstütztem Zeichensatz oder umgeleiteter Ausgabe erscheint eine kompakte Textzeile. `--version` gibt weiterhin nur die Version aus; `--gui` startet ohne CLI-Banner.
 
 Diese Aufrufe benötigen keine Videodateien:
 

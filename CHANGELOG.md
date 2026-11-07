@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-nightly.4
+
+- CLI-Startbanner mit VMAF-CHECK-Blockschrift, „by Xelavie“, Motto und Verlauf.
+- Versionsnummer wird direkt aus dem Programm übernommen.
+- Kompakte Ausgabe bei schmalen Terminals, nicht unterstützten Zeichensätzen und umgeleiteten Logs.
+- `--version` bleibt eine einzelne Zeile; kein CLI-Banner beim GUI-Start.
+- Vollständige Commands-Referenz ist nun auch im portablen Paket enthalten.
+
 ## 0.1.0-nightly.3
 
 - CLI ist Standard und nimmt Original/Encode als Argumente sowie Einstellungen als Flags entgegen.

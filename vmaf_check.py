@@ -27,7 +27,7 @@ import urllib.error
 import zipfile
 from fractions import Fraction
 
-__version__ = '0.1.0-nightly.3'
+__version__ = '0.1.0-nightly.4'
 
 COLOR_FIELDS = {'primaries':'color_primaries', 'transfer':'color_transfer',
                 'matrix':'color_space', 'range':'color_range'}

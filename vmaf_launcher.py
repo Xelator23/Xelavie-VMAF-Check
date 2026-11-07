@@ -4,6 +4,7 @@ import json
 import os
 from pathlib import Path
 import secrets
+import shutil
 import signal
 import subprocess
 import sys
@@ -298,6 +299,36 @@ def ui():
     return 0
 
 
+def print_banner():
+    if __package__:
+        from .vmaf_check import __version__
+    else:
+        from vmaf_check import __version__
+    lettering = (
+        '██╗   ██╗███╗   ███╗ █████╗ ███████╗     ██████╗██╗  ██╗███████╗ ██████╗██╗  ██╗',
+        '██║   ██║████╗ ████║██╔══██╗██╔════╝    ██╔════╝██║  ██║██╔════╝██╔════╝██║ ██╔╝',
+        '██║   ██║██╔████╔██║███████║█████╗      ██║     ███████║█████╗  ██║     █████╔╝',
+        '╚██╗ ██╔╝██║╚██╔╝██║██╔══██║██╔══╝     ██║     ██╔══██║██╔══╝  ██║     ██╔═██╗',
+        ' ╚████╔╝ ██║ ╚═╝ ██║██║  ██║██║         ╚██████╗██║  ██║███████╗╚██████╗██║  ██╗',
+        '  ╚═══╝  ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝          ╚═════╝╚═╝  ╚═╝╚══════╝ ╚═════╝╚═╝  ╚═╝',
+    )
+    width = max(len(line) for line in lettering)
+    version_label = f'▓▓▒▒░░ [ {__version__} ] '
+    border = '▓▓▒▒' + '░' * (width - 8) + '▒▒▓▓'
+    footer = version_label + '░' * max(0, width - len(version_label) - 4) + '▒▒▓▓'
+    banner = '\n'.join((border, '', *lettering, '',
+                        'by Xelavie'.center(width).rstrip(),
+                        'COMPARE · ANALYZE · QUALITY'.center(width).rstrip(), '', footer))
+    compact = f'VMAF CHECK | by Xelavie | {__version__}'
+    if not sys.stdout.isatty() or shutil.get_terminal_size().columns <= width:
+        banner = compact
+    try:
+        banner.encode(sys.stdout.encoding or 'utf-8')
+    except (UnicodeEncodeError, LookupError):
+        banner = compact
+    print(banner + '\n', flush=True)
+
+
 def main():
     args=sys.argv[1:]
     if args==['--gui']: return ui()
@@ -305,6 +336,8 @@ def main():
         raise ValueError('--gui separat aufrufen. Dateien und Einstellungen in der GUI auswaehlen.')
     if '--ui' in args or '--cli' in args:
         raise ValueError('CLI: ORIGINAL ENCODE [Optionen] angeben. Browser-Oberflaeche: --gui. Hilfe: --help.')
+    if '--version' not in args:
+        print_banner()
     if not args or args in (['--help'], ['-h']):
         print('Xelavie VMAF Check\n'
               'CLI: xelavie-vmaf-check ORIGINAL ENCODE [Optionen]\n'
