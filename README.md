@@ -2,6 +2,8 @@
 
 # Xelavie VMAF Check
 
+[Commands – alle Argumente und Beispiele](COMMANDS.md) · [Installation](INSTALLATION.md) · [uv und Git einrichten](UV_UND_GIT.md)
+
 **Lokale Videoqualitätsprüfung für Windows und Linux – mit CLI, Browser-UI und Warteschlange.**
 
 Vergleiche einen Encode mit seiner Originaldatei über den gesamten Film. Xelavie VMAF Check organisiert FFmpeg, Modelle, Crop-Erkennung und Ergebnisberichte. Deine Videos bleiben auf deinem Rechner.
@@ -135,6 +137,8 @@ sh ./vmaf-check.sh "/mnt/originale/Film.mkv" "/mnt/encodes/Film-1080p.mkv" --per
 `--gui` startet die Browser-Oberfläche und wird allein verwendet. Ohne Argumente oder mit `--help` erscheint die CLI-Hilfe. Es gibt keine Startauswahl und kein interaktives Eingabeformular. Ist Python 3.10+ vorhanden, geht auch `python vmaf_launcher.py` beziehungsweise `python3 vmaf_launcher.py`.
 
 ## Bedienung
+
+Die vollständige Argumentreferenz mit Standardwerten und Beispielen steht unter **[Commands](COMMANDS.md)**.
 
 **UI:** Unter „Dateiauswahl“ Original, Encode, Prüfanteil und Arbeitsordner setzen. „Prüfung starten“ startet die Warteschlange; „Zur Warteschlange“ reiht einen weiteren Vergleich ein. Wartende Aufträge können verschoben werden. „Abbrechen“ stoppt den aktuellen Lauf und pausiert die Warteschlange. Bei normalen Fehlern geht es automatisch weiter. Nach einem Neustart ist die Warteschlange zunächst pausiert.
 
