@@ -6,6 +6,8 @@ Beide Varianten verwenden dieselbe CLI, UI, Warteschlange und gespeicherte Konfi
 - **uv direkt aus GitHub:** uv und Git müssen bereits installiert sein. Prüfen mit `uv --version` und `git --version`.
 - **Optionales Wheel:** Bereits installiertes uv erforderlich; Git wird dafür nicht benötigt.
 
+Alle Aufrufe und Prüfoptionen: **[Commands – vollständige Argumentreferenz](COMMANDS.md)**.
+
 ## Installation über uv (Windows und Linux)
 
 **uv oder Git noch nicht vorhanden?** → [uv und Git unter Windows und Linux installieren](UV_UND_GIT.md).
