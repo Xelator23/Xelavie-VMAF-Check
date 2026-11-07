@@ -10,36 +10,58 @@ Vergleiche einen Encode mit seiner Originaldatei über den gesamten Film. Xelavi
 
 Dies ist eine Vorabversion. Die erste stabile Veröffentlichung ist als `v0.1.0` vorgesehen. Echte SDR-Prüfungen unter Windows wurden durchgeführt; vollständige HDR-/HLG-/Dolby-Vision-Videoläufe sind noch nicht validiert.
 
-## Download
+## Installation über uv (Windows und Linux)
 
-Unter [Releases](https://github.com/Xelator23/Xelavie-VMAF-Check/releases/tag/v0.1.0-nightly.2) stehen getrennte Pakete bereit:
+**Voraussetzung: uv und Git sind bereits installiert und im PATH erreichbar.** Prüfen mit `uv --version` und `git --version`. Wir liefern uv nicht mit und installieren es nicht automatisch. Eine Veröffentlichung auf PyPI ist für diesen Weg nicht erforderlich.
 
-| System | Download | Start |
-| --- | --- | --- |
-| Windows | `Xelavie-VMAF-Check-0.1.0-nightly.2-Windows.zip` | `vmaf-check.cmd` |
-| Linux | `Xelavie-VMAF-Check-0.1.0-nightly.2-Linux.tar.gz` | `sh ./vmaf-check.sh` |
-| uv (Windows & Linux) | `xelavie_vmaf_check-0.1.0.dev2-py3-none-any.whl` | `xelavie-vmaf-check` |
-
-**Empfohlen: [Paket herunterladen, SHA256 prüfen und erst danach lokal starten](INSTALLATION.md).** Kein `curl | bash`, kein `irm | iex` und keine Administratorrechte für das portable Paket.
-
-Die Pakete enthalten denselben Python-Prüfcode und dieselbe UI, jeweils mit dem passenden Starter. SHA256-Prüfsummen stehen im Release. FFmpeg und Modelle werden bei Bedarf separat heruntergeladen; Treiber werden nicht installiert.
-
-### Installation über vorhandenes uv
-
-**Voraussetzung: uv ist bereits installiert und über `uv --version` erreichbar.** Wir liefern uv nicht mit und installieren es nicht automatisch. Die portable Variante benötigt stattdessen Python 3.10+ oder vorhandenes uv.
-
-Lade das Wheel und `SHA256SUMS.txt` aus demselben Release herunter und prüfe das Paket gemäß [Installationsanleitung](INSTALLATION.md). Danach:
+Direkt aus dem aktuellen Standardbranch installieren und starten:
 
 ```sh
-uv tool install --python 3.12 ./xelavie_vmaf_check-0.1.0.dev2-py3-none-any.whl
+uv tool install git+https://github.com/Xelator23/Xelavie-VMAF-Check.git
 xelavie-vmaf-check
 ```
 
-Bei Bedarf zeigt `uv tool update-shell`, wie der Befehlsordner in deinen PATH aufgenommen wird; danach das Terminal neu öffnen. Direkter UI-/CLI-Start: `xelavie-vmaf-check --ui` beziehungsweise `xelavie-vmaf-check --cli`.
+Ohne Versionszusatz wird der aktuelle Entwicklungsstand installiert. Für die konkret veröffentlichte Nightly stattdessen:
 
-Updates: neues Wheel herunterladen, prüfen und mit `uv tool install --reinstall --python 3.12 ./DATEINAME.whl` installieren. Beende vorher laufende Prüfungen und die UI. Deinstallation: `uv tool uninstall xelavie-vmaf-check`. Gespeicherte Einstellungen und Ergebnisse bleiben in ihren bisherigen Benutzer-/Arbeitsordnern.
+```sh
+uv tool install "git+https://github.com/Xelator23/Xelavie-VMAF-Check.git@v0.1.0-nightly.2"
+```
 
-Das Paket wird über GitHub verteilt, **noch nicht über PyPI**. Daher derzeit nicht einfach `uv tool install xelavie-vmaf-check` oder `uv tool upgrade xelavie-vmaf-check` verwenden. `0.1.0.dev2` ist die Python-Paketbezeichnung für `0.1.0-nightly.2`. uv kann bei Bedarf die angeforderte Python-Version beschaffen; FFmpeg und Modelle lädt weiterhin die Anwendung.
+uv richtet eine eigene Python-Umgebung ein und kann bei Bedarf eine passende Python-Version beschaffen. Falls der Startbefehl nicht gefunden wird: `uv tool update-shell` ausführen und das Terminal neu öffnen. Direkter Start: `xelavie-vmaf-check --ui` oder `xelavie-vmaf-check --cli`.
+
+### Updates
+
+Beende vorher laufende Prüfungen und die UI. Für den neuesten Stand des Standardbranches:
+
+```sh
+uv tool install --reinstall --refresh git+https://github.com/Xelator23/Xelavie-VMAF-Check.git
+```
+
+Bei einer Installation über einen Versionstag bleibst du auf diesem Stand. Um auf ein anderes Release zu wechseln, `--reinstall` verwenden und den gewünschten Tag hinter `@` angeben. Der Befehl ohne Tag wechselt zum aktuellen Entwicklungsstand.
+
+Deinstallation: `uv tool uninstall xelavie-vmaf-check`. Einstellungen und Ergebnisse bleiben in ihren Benutzer-/Arbeitsordnern erhalten.
+
+## Portable und optionales Wheel
+
+Unter [Releases](https://github.com/Xelator23/Xelavie-VMAF-Check/releases/tag/v0.1.0-nightly.2) stehen weiterhin getrennte Pakete bereit:
+
+| Variante | Download | Start |
+| --- | --- | --- |
+| Windows portable | `Xelavie-VMAF-Check-0.1.0-nightly.2-Windows.zip` | `vmaf-check.cmd` |
+| Linux portable | `Xelavie-VMAF-Check-0.1.0-nightly.2-Linux.tar.gz` | `sh ./vmaf-check.sh` |
+| Optional: uv ohne Git | `xelavie_vmaf_check-0.1.0.dev2-py3-none-any.whl` | `xelavie-vmaf-check` |
+
+Portable benötigt Python 3.10+ oder bereits installiertes uv. Vor dem Entpacken beziehungsweise Installieren eines Release-Pakets dessen SHA256 gemäß [Installationsanleitung](INSTALLATION.md) prüfen. Kein `curl | bash`, kein `irm | iex` und keine Administratorrechte für das portable Paket.
+
+Das Wheel ist eine zusätzliche Möglichkeit für Nutzer mit uv, aber ohne Git:
+
+```sh
+uv tool install --python 3.12 ./xelavie_vmaf_check-0.1.0.dev2-py3-none-any.whl
+```
+
+Wheel-Updates: neues Wheel herunterladen, prüfen und mit `uv tool install --reinstall --python 3.12 ./DATEINAME.whl` installieren. `0.1.0.dev2` ist die Python-Paketbezeichnung für `0.1.0-nightly.2`.
+
+Alle Wege verwenden denselben Prüfcode und dieselbe UI. FFmpeg und Modelle werden bei Bedarf separat heruntergeladen; Treiber werden nicht installiert. Das Projekt ist noch nicht auf PyPI veröffentlicht: Der Installationsbefehl benötigt deshalb die GitHub-URL oder eine Wheel-Datei.
 
 ## Funktionen
 
