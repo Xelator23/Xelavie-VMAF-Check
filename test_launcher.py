@@ -51,7 +51,7 @@ class LauncherTests(unittest.TestCase):
             p=Path(d)/'file with spaces & symbols.mkv';p.write_bytes(b'fixture')
             cmd=l.build_command({'reference':str(p),'encoded':str(p),'percent':'25',
                                  'enc-color':'hdr10','enc-range':'full','download-tools':True})
-            self.assertEqual(cmd[3:5],[str(p),str(p)])
+            self.assertEqual(cmd[3:5],[str(p.resolve()),str(p.resolve())])
             self.assertEqual(cmd[cmd.index('--enc-color')+1],'hdr10')
             self.assertIn('--download-tools',cmd)
 
