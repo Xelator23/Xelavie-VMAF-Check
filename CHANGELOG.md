@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-nightly.5
+
+- Kompakte CLI-Starthilfe mit klarer Reihenfolge: Original/Remux zuerst, Encode danach.
+- Konkrete Dateipfad-Beispiele für Windows und Linux, auch bei getrennten Ordnern und Laufwerken.
+- Die vollständige Optionsliste erscheint erst mit `--help`; ohne Argumente wird keine Prüfung gestartet.
+- Pflichtargumente in der Hilfe heißen jetzt `ORIGINAL` und `ENCODE`.
+- README, Installationsanleitung und Commands zeigen die Filmangabe direkt am Einstieg.
+
 ## 0.1.0-nightly.4
 
 - CLI-Startbanner mit VMAF-CHECK-Blockschrift, „by Xelavie“, Motto und Verlauf.

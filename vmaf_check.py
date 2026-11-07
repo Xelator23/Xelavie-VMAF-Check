@@ -27,7 +27,7 @@ import urllib.error
 import zipfile
 from fractions import Fraction
 
-__version__ = '0.1.0-nightly.4'
+__version__ = '0.1.0-nightly.5'
 
 COLOR_FIELDS = {'primaries':'color_primaries', 'transfer':'color_transfer',
                 'matrix':'color_space', 'range':'color_range'}
@@ -658,11 +658,13 @@ def print_report(summary):
 
 def main():
     job_started = time.monotonic()
-    ap = argparse.ArgumentParser(description='Lokaler VMAF-Vergleich: SDR, HDR10/PQ, HLG, DV 5/7/8/10; Encode-Aufloesung automatisch.')
+    ap = argparse.ArgumentParser(
+        usage='%(prog)s "ORIGINAL.mkv" "ENCODE.mkv" [Optionen]',
+        description='Lokaler VMAF-Vergleich: Original zuerst, Encode danach. Pfade in Anfuehrungszeichen setzen.')
     ap.add_argument('--version', action='version', version='Xelavie VMAF Check '+__version__)
-    ap.add_argument('reference', type=Path, help='Original/Referenz')
-    ap.add_argument('encoded', type=Path, help='Zu pruefender Encode')
-    ap.add_argument('--percent', type=int, choices=(100, 50, 25), default=100)
+    ap.add_argument('reference', metavar='ORIGINAL', type=Path, help='Pfad zur Original-/Remux-Datei (erstes Pflichtargument)')
+    ap.add_argument('encoded', metavar='ENCODE', type=Path, help='Pfad zum zu pruefenden Encode (zweites Pflichtargument)')
+    ap.add_argument('--percent', type=int, choices=(100, 50, 25), default=100, help='Anteil der Frames ueber den ganzen Film (Standard: 100)')
     ap.add_argument('--display', choices=('auto', '1080', '2160'), default='auto', help='Modell automatisch aus Encode-Aufloesung (Standard)')
     ap.add_argument('--threads', type=int, default=min(16, os.cpu_count() or 1))
     ap.add_argument('--ffmpeg', help='Pfad zu FFmpeg')

@@ -72,7 +72,9 @@ class LauncherTests(unittest.TestCase):
     def test_no_arguments_show_help_without_prompt_or_browser(self):
         with patch.object(sys,'argv',['launcher']),patch('builtins.input',side_effect=AssertionError('No prompts')),patch.object(l,'ui') as ui,patch.object(l.subprocess,'call',return_value=0) as run,contextlib.redirect_stdout(io.StringIO()) as out:
             self.assertEqual(l.main(),0)
-            self.assertEqual(run.call_args.args[0][3:],['--help'])
+            run.assert_not_called()
+            self.assertIn('"ORIGINAL.mkv" "ENCODE.mkv"',out.getvalue())
+            self.assertIn('--percent 25',out.getvalue())
             self.assertIn('--gui',out.getvalue())
             ui.assert_not_called()
 

@@ -1,21 +1,35 @@
 # Commands
 
-Alle CLI-Argumente für **Xelavie VMAF Check 0.1.0-nightly.4**. Die CLI wird über Dateipfade und Flags bedient; ohne Argumente erscheint die Hilfe. Es gibt keine interaktiven Rückfragen.
+Alle CLI-Argumente für **Xelavie VMAF Check 0.1.0-nightly.5**. Die CLI wird über Dateipfade und Flags bedient; ohne Argumente erscheint eine kurze Starthilfe, mit `--help` die vollständige Hilfe. Es gibt keine interaktiven Rückfragen.
 
 [Start und Hilfe](#start-und-hilfe) · [Prüfung](#prüfung) · [Crop](#crop) · [Farbangaben](#farbangaben) · [Dolby Vision](#dolby-vision) · [Programme und Modelle](#programme-und-modelle) · [Ordner](#ordner) · [Beispiele](#beispiele)
 
 ## Aufruf
 
 ```sh
-xelavie-vmaf-check ORIGINAL ENCODE [OPTIONEN]
+xelavie-vmaf-check "ORIGINAL.mkv" "ENCODE.mkv" [OPTIONEN]
 ```
 
 | Pflichtargument | Beschreibung |
 | --- | --- |
-| `ORIGINAL` (`reference` in der Hilfe) | Pfad zur Original-/Referenzdatei; immer zuerst angeben. |
-| `ENCODE` (`encoded` in der Hilfe) | Pfad zur zu prüfenden Encode-Datei; immer als zweites Argument. |
+| `ORIGINAL` | Pfad zur Original-/Referenzdatei; immer zuerst angeben. |
+| `ENCODE` | Pfad zur zu prüfenden Encode-Datei; immer als zweites Argument. |
 
 Beide Dateien dürfen in unterschiedlichen Ordnern oder auf unterschiedlichen Laufwerken liegen. Pfade mit Leerzeichen in Anführungszeichen setzen. Original und Encode müssen dieselbe Schnittfassung, denselben Startframe und dieselbe konstante Bildrate haben. Es erfolgt keine automatische zeitliche Synchronisierung.
+
+**Diese Beispielpfade durch deine eigenen Dateien ersetzen.** `ORIGINAL` und `ENCODE` sind Platzhalter, keine zusätzlichen Flags. Die eckigen Klammern `[OPTIONEN]` nicht mit eingeben.
+
+Windows / PowerShell, 25 % der Frames:
+
+```powershell
+xelavie-vmaf-check "D:\Originale\Film.mkv" "E:\Encodes\Film.mkv" --percent 25
+```
+
+Linux, 25 % der Frames:
+
+```sh
+xelavie-vmaf-check "/mnt/originale/Film.mkv" "/mnt/encodes/Film.mkv" --percent 25
+```
 
 Für portable Pakete ersetzt du nur den Programmnamen:
 
@@ -34,7 +48,7 @@ Diese Aufrufe benötigen keine Videodateien:
 
 | Flag / Aufruf | Beschreibung |
 | --- | --- |
-| Ohne Argumente | Zeigt die CLI-Hilfe und beendet sich. |
+| Ohne Argumente | Zeigt die kurze Starthilfe mit Dateipfad-Beispiel und beendet sich. |
 | `-h`, `--help` | Zeigt Hilfe und verfügbare Prüfoptionen. |
 | `--version` | Zeigt die Programmversion. |
 | `--gui` | Öffnet die lokale Browser-Oberfläche. **Allein verwenden**, ohne Dateipfade oder Prüfoptionen. |

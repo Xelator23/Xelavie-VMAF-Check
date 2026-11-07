@@ -329,6 +329,30 @@ def print_banner():
     print(banner + '\n', flush=True)
 
 
+def print_quick_start():
+    print('FILME ANGEBEN\n'
+          '  xelavie-vmaf-check "ORIGINAL.mkv" "ENCODE.mkv" [Optionen]\n'
+          '\n'
+          '  1. ORIGINAL = vollstaendiger Pfad zur Original-/Remux-Datei\n'
+          '  2. ENCODE   = vollstaendiger Pfad zur zu pruefenden Datei\n'
+          '  Beide Dateien duerfen in verschiedenen Ordnern liegen.\n'
+          '  Beispielpfade ersetzen und jeden Pfad in Anfuehrungszeichen setzen.\n', flush=True)
+    if os.name == 'nt':
+        example = r'xelavie-vmaf-check "D:\Originale\Film.mkv" "E:\Encodes\Film.mkv" --percent 25'
+    else:
+        example = 'xelavie-vmaf-check "/mnt/originale/Film.mkv" "/mnt/encodes/Film.mkv" --percent 25'
+    print('BEISPIEL: 25 % DER FRAMES UEBER DEN GANZEN FILM\n'
+          f'  {example}\n'
+          '\n'
+          'HAEUFIGE OPTIONEN (hinter den beiden Dateipfaden)\n'
+          '  --percent 100|50|25    Pruefanteil; ohne Angabe: 100 %\n'
+          '  --work-dir "ORDNER"   Arbeitsordner fuer Temp und Ergebnisse\n'
+          '\n'
+          'HILFE UND OBERFLAECHE (ohne Dateipfade)\n'
+          '  xelavie-vmaf-check --help    Alle Optionen, auch Farbangaben\n'
+          '  xelavie-vmaf-check --gui     Browser-Oberflaeche starten\n', flush=True)
+
+
 def main():
     args=sys.argv[1:]
     if args==['--gui']: return ui()
@@ -339,11 +363,9 @@ def main():
     if '--version' not in args:
         print_banner()
     if not args or args in (['--help'], ['-h']):
-        print('Xelavie VMAF Check\n'
-              'CLI: xelavie-vmaf-check ORIGINAL ENCODE [Optionen]\n'
-              'GUI: xelavie-vmaf-check --gui\n'
-              'Beispiel: xelavie-vmaf-check "Original.mkv" "Encode.mkv" --percent 25\n'
-              'Ohne Argumente wird diese Hilfe angezeigt. Keine interaktive Eingabe.\n', flush=True)
+        print_quick_start()
+        if not args:
+            return 0
         args=['--help']
     return subprocess.call([sys.executable,'-u',str(ENGINE),*args])
 

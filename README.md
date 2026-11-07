@@ -8,9 +8,35 @@
 
 Vergleiche einen Encode mit seiner Originaldatei über den gesamten Film. Xelavie VMAF Check organisiert FFmpeg, Modelle, Crop-Erkennung und Ergebnisberichte. Deine Videos bleiben auf deinem Rechner.
 
-**Aktueller Stand: `0.1.0-nightly.4` · Release-Kanal: `nightly` · MIT-Lizenz**
+**Aktueller Stand: `0.1.0-nightly.5` · Release-Kanal: `nightly` · MIT-Lizenz**
 
 Dies ist eine Vorabversion. Die erste stabile Veröffentlichung ist als `v0.1.0` vorgesehen. Echte SDR-Prüfungen unter Windows wurden durchgeführt; vollständige HDR-/HLG-/Dolby-Vision-Videoläufe sind noch nicht validiert.
+
+## Filme prüfen – nach der Installation
+
+**Erster Dateipfad: Original/Remux. Zweiter Dateipfad: Encode.** Ersetze die Beispielpfade durch deine eigenen Dateien und setze jeden Pfad in Anführungszeichen. Die Dateien dürfen in verschiedenen Ordnern oder auf verschiedenen Laufwerken liegen.
+
+Windows / PowerShell:
+
+```powershell
+xelavie-vmaf-check "D:\Originale\Film.mkv" "E:\Encodes\Film.mkv" --percent 25
+```
+
+Linux:
+
+```sh
+xelavie-vmaf-check "/mnt/originale/Film.mkv" "/mnt/encodes/Film.mkv" --percent 25
+```
+
+`--percent 25` bewertet jedes vierte Bild über den ganzen Film. Für jedes zweite Bild `50`, für alle Bilder `100` verwenden. Ohne `--percent` werden alle Bilder bewertet.
+
+| Gewünschte Aktion | Aufruf |
+| --- | --- |
+| Kurze Starthilfe | `xelavie-vmaf-check` |
+| Alle Optionen einschließlich Farbangaben | `xelavie-vmaf-check --help` |
+| Dateien über die Browser-Oberfläche auswählen | `xelavie-vmaf-check --gui` |
+
+Portable: Den Programmnamen unter Windows durch `.\vmaf-check.cmd`, unter Linux durch `sh ./vmaf-check.sh` ersetzen. Die beiden Dateipfade und Optionen bleiben gleich. [Weitere Beispiele und alle Argumente](COMMANDS.md).
 
 ## Installation über uv (Windows und Linux)
 
@@ -18,20 +44,19 @@ Dies ist eine Vorabversion. Die erste stabile Veröffentlichung ist als `v0.1.0`
 
 **Voraussetzung: uv und Git sind bereits installiert und im PATH erreichbar.** Prüfen mit `uv --version` und `git --version`. Wir liefern uv nicht mit und installieren es nicht automatisch. Eine Veröffentlichung auf PyPI ist für diesen Weg nicht erforderlich.
 
-Direkt aus dem aktuellen Standardbranch installieren und starten:
+Direkt aus dem aktuellen Standardbranch installieren:
 
 ```sh
 uv tool install git+https://github.com/Xelator23/Xelavie-VMAF-Check.git
-xelavie-vmaf-check
 ```
 
 Ohne Versionszusatz wird der aktuelle Entwicklungsstand installiert. Für die konkret veröffentlichte Nightly stattdessen:
 
 ```sh
-uv tool install "git+https://github.com/Xelator23/Xelavie-VMAF-Check.git@v0.1.0-nightly.4"
+uv tool install "git+https://github.com/Xelator23/Xelavie-VMAF-Check.git@v0.1.0-nightly.5"
 ```
 
-uv richtet eine eigene Python-Umgebung ein und kann bei Bedarf eine passende Python-Version beschaffen. Falls der Startbefehl nicht gefunden wird: `uv tool update-shell` ausführen und das Terminal neu öffnen. Die CLI erhält Original und Encode als Argumente, Einstellungen als Flags. Ohne Argumente wird die Hilfe angezeigt. Die Browser-Oberfläche startet ausschließlich mit `xelavie-vmaf-check --gui`.
+uv richtet eine eigene Python-Umgebung ein und kann bei Bedarf eine passende Python-Version beschaffen. Falls der Startbefehl nicht gefunden wird: `uv tool update-shell` ausführen und das Terminal neu öffnen. Anschließend mit den beiden Dateipfaden starten, wie unter [Filme prüfen](#filme-prüfen--nach-der-installation) gezeigt. Ohne Argumente erscheint nur die kurze Starthilfe.
 
 ### Updates
 
@@ -47,23 +72,23 @@ Deinstallation: `uv tool uninstall xelavie-vmaf-check`. Einstellungen und Ergebn
 
 ## Portable und optionales Wheel
 
-Unter [Releases](https://github.com/Xelator23/Xelavie-VMAF-Check/releases/tag/v0.1.0-nightly.4) stehen weiterhin getrennte Pakete bereit:
+Unter [Releases](https://github.com/Xelator23/Xelavie-VMAF-Check/releases/tag/v0.1.0-nightly.5) stehen weiterhin getrennte Pakete bereit:
 
 | Variante | Download | Start |
 | --- | --- | --- |
-| Windows portable | `Xelavie-VMAF-Check-0.1.0-nightly.4-Windows.zip` | `vmaf-check.cmd` |
-| Linux portable | `Xelavie-VMAF-Check-0.1.0-nightly.4-Linux.tar.gz` | `sh ./vmaf-check.sh` |
-| Optional: uv ohne Git | `xelavie_vmaf_check-0.1.0.dev4-py3-none-any.whl` | `xelavie-vmaf-check` |
+| Windows portable | `Xelavie-VMAF-Check-0.1.0-nightly.5-Windows.zip` | `vmaf-check.cmd` |
+| Linux portable | `Xelavie-VMAF-Check-0.1.0-nightly.5-Linux.tar.gz` | `sh ./vmaf-check.sh` |
+| Optional: uv ohne Git | `xelavie_vmaf_check-0.1.0.dev5-py3-none-any.whl` | `xelavie-vmaf-check` |
 
 Portable benötigt Python 3.10+ oder bereits installiertes uv. Vor dem Entpacken beziehungsweise Installieren eines Release-Pakets dessen SHA256 gemäß [Installationsanleitung](INSTALLATION.md) prüfen. Kein `curl | bash`, kein `irm | iex` und keine Administratorrechte für das portable Paket.
 
 Das Wheel ist eine zusätzliche Möglichkeit für Nutzer mit uv, aber ohne Git:
 
 ```sh
-uv tool install --python 3.12 ./xelavie_vmaf_check-0.1.0.dev4-py3-none-any.whl
+uv tool install --python 3.12 ./xelavie_vmaf_check-0.1.0.dev5-py3-none-any.whl
 ```
 
-Wheel-Updates: neues Wheel herunterladen, prüfen und mit `uv tool install --reinstall --python 3.12 ./DATEINAME.whl` installieren. `0.1.0.dev4` ist die Python-Paketbezeichnung für `0.1.0-nightly.4`.
+Wheel-Updates: neues Wheel herunterladen, prüfen und mit `uv tool install --reinstall --python 3.12 ./DATEINAME.whl` installieren. `0.1.0.dev5` ist die Python-Paketbezeichnung für `0.1.0-nightly.5`.
 
 Alle Wege verwenden denselben Prüfcode und dieselbe UI. FFmpeg und Modelle werden bei Bedarf separat heruntergeladen; Treiber werden nicht installiert. Das Projekt ist noch nicht auf PyPI veröffentlicht: Der Installationsbefehl benötigt deshalb die GitHub-URL oder eine Wheel-Datei.
 
@@ -123,7 +148,7 @@ Direkter Start mit bekannten BT.709-Limited-Quellen:
 ### Linux
 
 ```sh
-tar -xzf Xelavie-VMAF-Check-0.1.0-nightly.4-Linux.tar.gz
+tar -xzf Xelavie-VMAF-Check-0.1.0-nightly.5-Linux.tar.gz
 cd Xelavie-VMAF-Check
 sh ./vmaf-check.sh
 ```
