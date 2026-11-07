@@ -19,10 +19,13 @@ def main():
     executable = Path(sys.executable).parent / ('xelavie-vmaf-check.exe' if os.name == 'nt' else 'xelavie-vmaf-check')
     with tempfile.TemporaryDirectory() as directory:
         os.environ['VMAF_SETTINGS_FILE'] = str(Path(directory)/'settings.json')
-        for arguments, expected in [(['--version'], vmaf_check.__version__), (['--help'], '--percent'), ([], 'Bedienung')]:
-            result = subprocess.run([str(executable), *arguments], cwd=directory, input='0\n', text=True, capture_output=True, timeout=20)
+        for arguments, expected in [(['--version'], vmaf_check.__version__), (['--help'], '--percent'), ([], '--gui')]:
+            result = subprocess.run([str(executable), *arguments], cwd=directory, input='', text=True, capture_output=True, timeout=20)
             assert result.returncode == 0, result.stderr
             assert expected in result.stdout, result.stdout
+            assert 'Original-Datei:' not in result.stdout
+        result = subprocess.run([str(executable), 'missing-original.mkv'], cwd=directory, input='', text=True, capture_output=True, timeout=20)
+        assert result.returncode != 0  # Missing encode must fail, never prompt.
         # Load CLI code, engine subprocess and all UI assets from the installed wheel.
         assert callable(vmaf_cli.collect_inputs)
         vmaf_settings.save_work_directory(str(Path(directory)/'work'))

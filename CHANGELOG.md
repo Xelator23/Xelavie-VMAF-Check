@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-nightly.3
+
+- CLI ist Standard und nimmt Original/Encode als Argumente sowie Einstellungen als Flags entgegen.
+- Ohne Argumente erscheint die Hilfe; kein Auswahlmenü und keine interaktiven Rückfragen.
+- Browser-Oberfläche ausschließlich mit `--gui`; bisherige Flags `--ui` und `--cli` entfallen.
+- Windows-/Linux-Starter und uv-Befehl verwenden dasselbe Verhalten.
+- Startanleitungen, Paketprüfung und Tests angepasst; uv/Git-Einrichtungsanleitung in den portablen Paketen enthalten.
+
 ## 0.1.0-nightly.2
 
 - Portable Windows-/Linux-Pakete und zusätzlich ein installierbares Python-Wheel für uv.

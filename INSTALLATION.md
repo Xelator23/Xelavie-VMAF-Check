@@ -22,10 +22,10 @@ xelavie-vmaf-check
 Ohne Versionszusatz wird der aktuelle Entwicklungsstand installiert. Für die konkret veröffentlichte Nightly stattdessen:
 
 ```sh
-uv tool install "git+https://github.com/Xelator23/Xelavie-VMAF-Check.git@v0.1.0-nightly.2"
+uv tool install "git+https://github.com/Xelator23/Xelavie-VMAF-Check.git@v0.1.0-nightly.3"
 ```
 
-uv richtet eine eigene Python-Umgebung ein und kann bei Bedarf eine passende Python-Version beschaffen. Falls der Startbefehl nicht gefunden wird: `uv tool update-shell` ausführen und das Terminal neu öffnen. Direkter Start: `xelavie-vmaf-check --ui` oder `xelavie-vmaf-check --cli`.
+uv richtet eine eigene Python-Umgebung ein und kann bei Bedarf eine passende Python-Version beschaffen. Falls der Startbefehl nicht gefunden wird: `uv tool update-shell` ausführen und das Terminal neu öffnen. Die CLI erhält Original und Encode als Argumente, Einstellungen als Flags. Ohne Argumente wird die Hilfe angezeigt. Die Browser-Oberfläche startet ausschließlich mit `xelavie-vmaf-check --gui`.
 
 ### Updates
 
@@ -45,13 +45,13 @@ Die folgenden Download- und Prüfsummenschritte gelten für die Release-Pakete. 
 
 ### 1. Dateien herunterladen
 
-Öffne [Release 0.1.0-nightly.2](https://github.com/Xelator23/Xelavie-VMAF-Check/releases/tag/v0.1.0-nightly.2) und lade `SHA256SUMS.txt` sowie eines dieser Pakete in einen neuen, leeren Ordner:
+Öffne [Release 0.1.0-nightly.3](https://github.com/Xelator23/Xelavie-VMAF-Check/releases/tag/v0.1.0-nightly.3) und lade `SHA256SUMS.txt` sowie eines dieser Pakete in einen neuen, leeren Ordner:
 
 | Variante | Datei |
 | --- | --- |
-| Windows portable | `Xelavie-VMAF-Check-0.1.0-nightly.2-Windows.zip` |
-| Linux portable | `Xelavie-VMAF-Check-0.1.0-nightly.2-Linux.tar.gz` |
-| uv für Windows und Linux | `xelavie_vmaf_check-0.1.0.dev2-py3-none-any.whl` |
+| Windows portable | `Xelavie-VMAF-Check-0.1.0-nightly.3-Windows.zip` |
+| Linux portable | `Xelavie-VMAF-Check-0.1.0-nightly.3-Linux.tar.gz` |
+| uv für Windows und Linux | `xelavie_vmaf_check-0.1.0.dev3-py3-none-any.whl` |
 
 Die automatisch von GitHub angebotenen „Source code“-Archive sind andere Dateien. Diese Anleitung verwendet die ausdrücklich aufgeführten Release-Pakete. Es wird kein heruntergeladener Skripttext direkt an eine Shell weitergereicht.
 
@@ -62,7 +62,7 @@ Die automatisch von GitHub angebotenen „Source code“-Archive sind andere Dat
 Setze `$package` auf genau die heruntergeladene Datei (ZIP oder Wheel):
 
 ```powershell
-$package = 'Xelavie-VMAF-Check-0.1.0-nightly.2-Windows.zip'
+$package = 'Xelavie-VMAF-Check-0.1.0-nightly.3-Windows.zip'
 $entries = @(Get-Content -LiteralPath '.\SHA256SUMS.txt' | Where-Object { $_ -match ('^[0-9a-f]{64}  ' + [regex]::Escape($package) + '$') })
 if ($entries.Count -ne 1) { throw 'Keine eindeutige SHA256 für dieses Paket.' }
 $expected = $entries[0].Substring(0,64)
@@ -78,7 +78,7 @@ Setze `package` auf die heruntergeladene Datei (TAR.GZ oder Wheel):
 ```sh
 (
   set -eu
-  package='Xelavie-VMAF-Check-0.1.0-nightly.2-Linux.tar.gz'
+  package='Xelavie-VMAF-Check-0.1.0-nightly.3-Linux.tar.gz'
   expected=$(awk -v file="$package" '$2 == file {print $1}' SHA256SUMS.txt)
   [ "${#expected}" -eq 64 ] || { echo 'Keine eindeutige SHA256 für dieses Paket.' >&2; exit 1; }
   printf '%s  %s\n' "$expected" "$package" | sha256sum --check -
@@ -92,14 +92,14 @@ Setze `package` auf die heruntergeladene Datei (TAR.GZ oder Wheel):
 Windows:
 
 ```powershell
-Expand-Archive -LiteralPath '.\Xelavie-VMAF-Check-0.1.0-nightly.2-Windows.zip' -DestinationPath '.\geprueft'
+Expand-Archive -LiteralPath '.\Xelavie-VMAF-Check-0.1.0-nightly.3-Windows.zip' -DestinationPath '.\geprueft'
 .\geprueft\Xelavie-VMAF-Check\vmaf-check.cmd
 ```
 
 Linux:
 
 ```sh
-mkdir geprueft && tar -xzf Xelavie-VMAF-Check-0.1.0-nightly.2-Linux.tar.gz -C geprueft && sh ./geprueft/Xelavie-VMAF-Check/vmaf-check.sh
+mkdir geprueft && tar -xzf Xelavie-VMAF-Check-0.1.0-nightly.3-Linux.tar.gz -C geprueft && sh ./geprueft/Xelavie-VMAF-Check/vmaf-check.sh
 ```
 
 Fehlt Python, darf nur vorhandenes uv Python beschaffen. Fehlen beide Voraussetzungen, zeigt der Starter einen Hinweis und beendet sich.
@@ -109,13 +109,13 @@ Fehlt Python, darf nur vorhandenes uv Python beschaffen. Fehlen beide Voraussetz
 Nach erfolgreicher Prüfung des **Wheels** unter Windows oder Linux:
 
 ```sh
-uv tool install --python 3.12 ./xelavie_vmaf_check-0.1.0.dev2-py3-none-any.whl
+uv tool install --python 3.12 ./xelavie_vmaf_check-0.1.0.dev3-py3-none-any.whl
 xelavie-vmaf-check
 ```
 
-Der Start bietet die gewohnte Auswahl CLI/UI. `xelavie-vmaf-check --ui` und `xelavie-vmaf-check --cli` starten die jeweilige Oberfläche direkt. Falls der Befehl nicht gefunden wird, `uv tool update-shell` ausführen und ein neues Terminal öffnen.
+Ohne Argumente erscheint die CLI-Hilfe. Einen Vergleich startest du mit `xelavie-vmaf-check "Original.mkv" "Encode.mkv" --percent 25`; die Browser-Oberfläche mit `xelavie-vmaf-check --gui`. Falls der Befehl nicht gefunden wird, `uv tool update-shell` ausführen und ein neues Terminal öffnen.
 
-Die Python-Paketversion `0.1.0.dev2` entspricht `0.1.0-nightly.2`. Es gibt aktuell **keine Veröffentlichung auf PyPI**. Bei dieser optionalen Variante wird der Pfad zur Wheel-Datei verwendet; alternativ ist die direkte GitHub-Installation oben möglich.
+Die Python-Paketversion `0.1.0.dev3` entspricht `0.1.0-nightly.3`. Es gibt aktuell **keine Veröffentlichung auf PyPI**. Bei dieser optionalen Variante wird der Pfad zur Wheel-Datei verwendet; alternativ ist die direkte GitHub-Installation oben möglich.
 
 ### Updates der Downloadpakete und Deinstallation
 
@@ -154,6 +154,6 @@ Starte dann direkt mit `--no-download`, beispielsweise für einen SDR-Vergleich:
 python3 vmaf_check.py "/mnt/originale/Film.mkv" "/mnt/encodes/Film.mkv" --no-download --ffmpeg "/opt/ffmpeg/bin/ffmpeg" --ffprobe "/opt/ffmpeg/bin/ffprobe" --model "/opt/vmaf/vmaf_v0.6.1.json" --percent 25
 ```
 
-Unter Windows entsprechend `python` und Windows-Pfade verwenden. Für eine P7-Konvertierung ist zusätzlich ein lokales `--dovi-tool` erforderlich. Diesen Offline-Modus über den direkten Aufruf nutzen; `--cli` und `--ui` lassen sich derzeit nicht mit zusätzlichen Starteroptionen kombinieren.
+Unter Windows entsprechend `python` und Windows-Pfade verwenden. Für eine P7-Konvertierung ist zusätzlich ein lokales `--dovi-tool` erforderlich. Diesen Offline-Modus über den direkten Aufruf nutzen; `--gui` wird separat aufgerufen.
 
 Weitere Bedienung: [README](README.md) · [technische Anleitung](ANLEITUNG.txt).

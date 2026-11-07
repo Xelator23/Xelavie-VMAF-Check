@@ -1,8 +1,15 @@
-XELAVIE VMAF CHECK 0.1.0-nightly.2
+XELAVIE VMAF CHECK 0.1.0-nightly.3
 
-Start, UI, CLI-Navigation und Beispielbilder: siehe README.md.
+Start, GUI, CLI-Argumente und Beispielbilder: siehe README.md.
 Dies ist eine Vorabversion. Echte HDR-/HLG-/DV-Videolaeufe sind noch
 nicht vollstaendig validiert; Profil 7 ohne vollstaendige FEL-Rekonstruktion.
+
+START UND ARGUMENTE
+Ohne Argumente: CLI-Hilfe, kein Formular und keine Startauswahl.
+Pruefung: xelavie-vmaf-check "Original.mkv" "Encode.mkv" --percent 25
+GUI:      xelavie-vmaf-check --gui
+Portable: .\vmaf-check.cmd bzw. sh ./vmaf-check.sh mit denselben Argumenten.
+--gui wird separat verwendet. Die bisherigen Flags --ui und --cli entfallen.
 
 FEHLENDE ODER FALSCHE FARBANGABEN
 FFprobe liest Angaben aus Container und/oder Videobitstream. Bleiben

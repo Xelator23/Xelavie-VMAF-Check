@@ -6,7 +6,7 @@
 
 Vergleiche einen Encode mit seiner Originaldatei über den gesamten Film. Xelavie VMAF Check organisiert FFmpeg, Modelle, Crop-Erkennung und Ergebnisberichte. Deine Videos bleiben auf deinem Rechner.
 
-**Aktueller Stand: `0.1.0-nightly.2` · Release-Kanal: `nightly` · MIT-Lizenz**
+**Aktueller Stand: `0.1.0-nightly.3` · Release-Kanal: `nightly` · MIT-Lizenz**
 
 Dies ist eine Vorabversion. Die erste stabile Veröffentlichung ist als `v0.1.0` vorgesehen. Echte SDR-Prüfungen unter Windows wurden durchgeführt; vollständige HDR-/HLG-/Dolby-Vision-Videoläufe sind noch nicht validiert.
 
@@ -26,10 +26,10 @@ xelavie-vmaf-check
 Ohne Versionszusatz wird der aktuelle Entwicklungsstand installiert. Für die konkret veröffentlichte Nightly stattdessen:
 
 ```sh
-uv tool install "git+https://github.com/Xelator23/Xelavie-VMAF-Check.git@v0.1.0-nightly.2"
+uv tool install "git+https://github.com/Xelator23/Xelavie-VMAF-Check.git@v0.1.0-nightly.3"
 ```
 
-uv richtet eine eigene Python-Umgebung ein und kann bei Bedarf eine passende Python-Version beschaffen. Falls der Startbefehl nicht gefunden wird: `uv tool update-shell` ausführen und das Terminal neu öffnen. Direkter Start: `xelavie-vmaf-check --ui` oder `xelavie-vmaf-check --cli`.
+uv richtet eine eigene Python-Umgebung ein und kann bei Bedarf eine passende Python-Version beschaffen. Falls der Startbefehl nicht gefunden wird: `uv tool update-shell` ausführen und das Terminal neu öffnen. Die CLI erhält Original und Encode als Argumente, Einstellungen als Flags. Ohne Argumente wird die Hilfe angezeigt. Die Browser-Oberfläche startet ausschließlich mit `xelavie-vmaf-check --gui`.
 
 ### Updates
 
@@ -45,29 +45,29 @@ Deinstallation: `uv tool uninstall xelavie-vmaf-check`. Einstellungen und Ergebn
 
 ## Portable und optionales Wheel
 
-Unter [Releases](https://github.com/Xelator23/Xelavie-VMAF-Check/releases/tag/v0.1.0-nightly.2) stehen weiterhin getrennte Pakete bereit:
+Unter [Releases](https://github.com/Xelator23/Xelavie-VMAF-Check/releases/tag/v0.1.0-nightly.3) stehen weiterhin getrennte Pakete bereit:
 
 | Variante | Download | Start |
 | --- | --- | --- |
-| Windows portable | `Xelavie-VMAF-Check-0.1.0-nightly.2-Windows.zip` | `vmaf-check.cmd` |
-| Linux portable | `Xelavie-VMAF-Check-0.1.0-nightly.2-Linux.tar.gz` | `sh ./vmaf-check.sh` |
-| Optional: uv ohne Git | `xelavie_vmaf_check-0.1.0.dev2-py3-none-any.whl` | `xelavie-vmaf-check` |
+| Windows portable | `Xelavie-VMAF-Check-0.1.0-nightly.3-Windows.zip` | `vmaf-check.cmd` |
+| Linux portable | `Xelavie-VMAF-Check-0.1.0-nightly.3-Linux.tar.gz` | `sh ./vmaf-check.sh` |
+| Optional: uv ohne Git | `xelavie_vmaf_check-0.1.0.dev3-py3-none-any.whl` | `xelavie-vmaf-check` |
 
 Portable benötigt Python 3.10+ oder bereits installiertes uv. Vor dem Entpacken beziehungsweise Installieren eines Release-Pakets dessen SHA256 gemäß [Installationsanleitung](INSTALLATION.md) prüfen. Kein `curl | bash`, kein `irm | iex` und keine Administratorrechte für das portable Paket.
 
 Das Wheel ist eine zusätzliche Möglichkeit für Nutzer mit uv, aber ohne Git:
 
 ```sh
-uv tool install --python 3.12 ./xelavie_vmaf_check-0.1.0.dev2-py3-none-any.whl
+uv tool install --python 3.12 ./xelavie_vmaf_check-0.1.0.dev3-py3-none-any.whl
 ```
 
-Wheel-Updates: neues Wheel herunterladen, prüfen und mit `uv tool install --reinstall --python 3.12 ./DATEINAME.whl` installieren. `0.1.0.dev2` ist die Python-Paketbezeichnung für `0.1.0-nightly.2`.
+Wheel-Updates: neues Wheel herunterladen, prüfen und mit `uv tool install --reinstall --python 3.12 ./DATEINAME.whl` installieren. `0.1.0.dev3` ist die Python-Paketbezeichnung für `0.1.0-nightly.3`.
 
 Alle Wege verwenden denselben Prüfcode und dieselbe UI. FFmpeg und Modelle werden bei Bedarf separat heruntergeladen; Treiber werden nicht installiert. Das Projekt ist noch nicht auf PyPI veröffentlicht: Der Installationsbefehl benötigt deshalb die GitHub-URL oder eine Wheel-Datei.
 
 ## Funktionen
 
-- Startauswahl zwischen interaktiver CLI und lokaler Browser-UI.
+- CLI über Dateipfade und Flags; lokale Browser-Oberfläche auf Wunsch mit `--gui`.
 - Dashboard, Dateiauswahl, persistente Warteschlange und kompakte Ergebnisse.
 - Fehlerhafte Aufträge halten die Warteschlange nicht auf; erfolgreiche verschwinden automatisch aus der Warteschlange und bleiben als Ergebnis erhalten.
 - 100 %, 50 % oder 25 % der Frames über die gesamte Filmlänge bewerten.
@@ -78,7 +78,7 @@ Alle Wege verwenden denselben Prüfcode und dieselbe UI. FFmpeg und Modelle werd
 - Gemeinsamer, gespeicherter Arbeitsordner mit `Temp` und `Ergebnisse`.
 - Fortschritt, Laufzeit, Restzeitschätzung sowie getrennte Vorbereitung und Messzeit. FPS beziehen sich nur auf die Messung.
 - JSON-, CSV- und Protokolldateien; Ergebnisberichte können in der UI gelöscht werden.
-- Getrennt gemerkte Original-/Encode-Ordner, Tab-Vervollständigung und Farbauswahl in der CLI. Live-Pfadvorschau unter Windows; unter Linux Trefferanzeige mit zweimal Tab.
+- Original und Encode als getrennte Dateipfade; Farb-Overrides über Flags. Pfadvervollständigung übernimmt deine Shell.
 
 ## Beispielbilder
 
@@ -106,7 +106,7 @@ Nach dem Herunterladen und Prüfen gemäß [Installationsanleitung](INSTALLATION
 
 ### Windows
 
-Doppelklicke auf `vmaf-check.cmd` oder starte im entpackten Ordner:
+Öffne PowerShell im entpackten Ordner. Ohne Argumente erscheint die Hilfe:
 
 ```powershell
 .\vmaf-check.cmd
@@ -121,7 +121,7 @@ Direkter Start mit bekannten BT.709-Limited-Quellen:
 ### Linux
 
 ```sh
-tar -xzf Xelavie-VMAF-Check-0.1.0-nightly.2-Linux.tar.gz
+tar -xzf Xelavie-VMAF-Check-0.1.0-nightly.3-Linux.tar.gz
 cd Xelavie-VMAF-Check
 sh ./vmaf-check.sh
 ```
@@ -132,7 +132,7 @@ Direkter Start ohne Farb-Overrides:
 sh ./vmaf-check.sh "/mnt/originale/Film.mkv" "/mnt/encodes/Film-1080p.mkv" --percent 25 --work-dir "/mnt/vmaf-arbeit"
 ```
 
-`--ui` startet die Browser-UI, `--cli` die interaktive Auswahl. Diese beiden Schalter jeweils allein verwenden. `--help` zeigt die Optionen des direkten Aufrufs. Ist Python 3.10+ vorhanden, geht auch `python vmaf_launcher.py` beziehungsweise `python3 vmaf_launcher.py`.
+`--gui` startet die Browser-Oberfläche und wird allein verwendet. Ohne Argumente oder mit `--help` erscheint die CLI-Hilfe. Es gibt keine Startauswahl und kein interaktives Eingabeformular. Ist Python 3.10+ vorhanden, geht auch `python vmaf_launcher.py` beziehungsweise `python3 vmaf_launcher.py`.
 
 ## Bedienung
 
@@ -140,21 +140,32 @@ sh ./vmaf-check.sh "/mnt/originale/Film.mkv" "/mnt/encodes/Film-1080p.mkv" --per
 
 Das Prüfprotokoll ist einklappbar und öffnet sich bei Fehlern. Fortschritt und Restzeit sind Arbeitsanzeigen, keine geschätzten VMAF-Scores. „UI beenden“ beendet den lokalen Dienst; allein das Schließen des Browser-Tabs beendet ihn nicht.
 
-**CLI:** Original, Encode und Prüfanteil werden nacheinander abgefragt. Danach folgen getrennte Farbmodi: Automatisch, BT.709/SDR, HDR10/PQ oder HLG. Bei einem Preset wird zusätzlich Limited/Full abgefragt. Presets nur verwenden, wenn die tatsächlichen Quelleigenschaften bekannt sind; sie überschreiben vorhandene Angaben.
+**CLI:** Die Reihenfolge ist `ORIGINAL ENCODE [Optionen]`. Pfade mit Leerzeichen in Anführungszeichen setzen. Fehlende Pflichtargumente oder ungültige Optionen führen zu einer Fehlermeldung und einem Fehlercode; es wird nichts interaktiv nachgefragt.
 
-| Eingabe | Wirkung |
+```sh
+xelavie-vmaf-check "Original.mkv" "Encode.mkv" --percent 25
+```
+
+| Argument / Flag | Bedeutung |
 | --- | --- |
-| Vollständiger Dateipfad | Datei direkt wählen, auch in einem anderen Ordner/Laufwerk |
-| Vollständiger Ordnerpfad | Ordner öffnen |
-| `cd ..` | Eine Ebene nach oben |
-| `cd "Unterordner"` | Unterordner öffnen |
-| `D:` | Unter Windows Laufwerkswurzel öffnen |
-| `dir` / `ls` | Ordnerinhalt anzeigen |
-| Tab | Pfad vervollständigen |
-| Strg+U | Eingabe leeren |
-| Strg+C | Abbrechen |
+| `ORIGINAL ENCODE` | Zwei Dateipfade, auch aus unterschiedlichen Ordnern/Laufwerken |
+| `--percent 100`, `50` oder `25` | Prüfanteil; Standard: 100 % |
+| `--work-dir "PFAD"` | Gemeinsamer Arbeitsordner für Temp und Ergebnisse |
+| `--ref-color bt709 --enc-color bt709` | Bekannte SDR-BT.709-Limited-Quellwerte explizit setzen |
+| `--ref-range full` / `--enc-range full` | Bekannten Full-Range-Wertebereich setzen |
+| `--crop auto` | Automatische Balkenerkennung (Standard) |
+| `--help` | Alle Prüfoptionen anzeigen |
+| `--gui` | Browser-Oberfläche öffnen; separat verwenden |
 
-Unter Windows zeigt die CLI bei unterstützter Konsole eine gefilterte Vorschau beim Tippen. Unter Linux verwendet sie `readline`: zweimal Tab zeigt mehrere Treffer. Ohne `readline` bleibt die normale Texteingabe verfügbar.
+Farbangaben bleiben ohne Overrides automatisch. Presets nur bei bekannten Quelleigenschaften setzen: Sie überschreiben vorhandene Angaben. Dateien und Optionen werden direkt an die Prüfung übergeben. Tab-Vervollständigung und Navigation erfolgen in deiner Shell, nicht in einem Formular der Anwendung.
+
+Browser-Oberfläche starten:
+
+```sh
+xelavie-vmaf-check --gui
+```
+
+Portable unter Windows: `.\vmaf-check.cmd --gui`; unter Linux: `sh ./vmaf-check.sh --gui`.
 
 ## Vergleichsbedingungen und Grenzen
 

@@ -95,9 +95,11 @@ class CliTests(unittest.TestCase):
     def test_noninteractive_input_does_not_use_console_editor(self):
         with patch.object(c.sys.stdin,'isatty',return_value=False),patch('builtins.input',return_value='film.mkv'),patch.object(c,'windows_input') as editor:
             self.assertEqual(c.path_input('Datei: ',Path.cwd()),'film.mkv');editor.assert_not_called()
-    def test_cli_passes_collected_fields(self):
-        data={'reference':'a','encoded':'b','percent':'25','ref-color':'bt709','enc-color':'bt709'}
-        with patch.object(c,'collect_inputs',return_value=data),patch.object(l,'build_command',return_value=['fake']) as build,patch.object(l.subprocess,'call',return_value=0),contextlib.redirect_stdout(io.StringIO()):
-            self.assertEqual(l.cli(),0);build.assert_called_once_with(data)
+    def test_cli_passes_flags_without_collecting_inputs(self):
+        args=['a.mkv','b.mkv','--percent','25','--ref-color','bt709','--enc-color','bt709']
+        with patch.object(l.sys,'argv',['launcher',*args]),patch.object(c,'collect_inputs') as collect,patch.object(l.subprocess,'call',return_value=0) as run:
+            self.assertEqual(l.main(),0)
+            self.assertEqual(run.call_args.args[0][3:],args)
+            collect.assert_not_called()
 
 if __name__=='__main__':unittest.main()

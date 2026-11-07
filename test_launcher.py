@@ -69,11 +69,31 @@ class LauncherTests(unittest.TestCase):
             self.assertEqual(result['directories'][0]['name'],'folder')
             self.assertEqual([x['name'] for x in result['files']],['clip.mkv'])
 
-    def test_menu_selects_ui(self):
-        with patch.object(sys,'argv',['launcher']),patch('builtins.input',return_value='2'),patch.object(l,'ui',return_value=0) as ui,contextlib.redirect_stdout(io.StringIO()):
-            self.assertEqual(l.main(),0);ui.assert_called_once()
+    def test_no_arguments_show_help_without_prompt_or_browser(self):
+        with patch.object(sys,'argv',['launcher']),patch('builtins.input',side_effect=AssertionError('No prompts')),patch.object(l,'ui') as ui,patch.object(l.subprocess,'call',return_value=0) as run,contextlib.redirect_stdout(io.StringIO()) as out:
+            self.assertEqual(l.main(),0)
+            self.assertEqual(run.call_args.args[0][3:],['--help'])
+            self.assertIn('--gui',out.getvalue())
+            ui.assert_not_called()
 
-    def test_direct_args_bypass_menu(self):
+    def test_gui_flag_opens_browser_mode(self):
+        with patch.object(sys,'argv',['launcher','--gui']),patch.object(l,'ui',return_value=0) as ui,patch.object(l.subprocess,'call') as run:
+            self.assertEqual(l.main(),0);ui.assert_called_once();run.assert_not_called()
+
+    def test_gui_combination_and_old_flags_are_rejected(self):
+        for args in (['--gui','a.mkv','b.mkv'],['--gui','--percent','25'],['--ui'],['--cli']):
+            with self.subTest(args=args),patch.object(sys,'argv',['launcher',*args]),patch.object(l,'ui') as ui,patch.object(l.subprocess,'call') as run:
+                with self.assertRaises(ValueError):l.main()
+                ui.assert_not_called();run.assert_not_called()
+
+    def test_help_shows_gui_flag_and_engine_options(self):
+        for flag in ('--help','-h'):
+            with patch.object(sys,'argv',['launcher',flag]),patch.object(l.subprocess,'call',return_value=0) as run,contextlib.redirect_stdout(io.StringIO()) as out:
+                self.assertEqual(l.main(),0)
+                self.assertIn('--gui',out.getvalue())
+                self.assertEqual(run.call_args.args[0][3:],['--help'])
+
+    def test_direct_args_reach_engine(self):
         args=['a.mkv','b.mkv','--percent','50']
         with patch.object(sys,'argv',['launcher',*args]),patch.object(l.subprocess,'call',return_value=0) as run:
             l.main();self.assertEqual(run.call_args.args[0][3:],args)

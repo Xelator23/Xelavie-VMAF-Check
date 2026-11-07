@@ -95,7 +95,7 @@ uv tool install git+https://github.com/Xelator23/Xelavie-VMAF-Check.git
 xelavie-vmaf-check
 ```
 
-Das installiert den aktuellen Entwicklungsstand. Der Start bietet die Auswahl zwischen CLI und UI. Für eine feste Nightly-Version, Updates und die portablen Downloads siehe die [Installationsanleitung](INSTALLATION.md).
+Das installiert den aktuellen Entwicklungsstand. Ohne Argumente erscheint die CLI-Hilfe. Ein Vergleich startet mit `xelavie-vmaf-check "Original.mkv" "Encode.mkv" --percent 25`. Die Browser-Oberfläche öffnet sich nur mit `xelavie-vmaf-check --gui`. Für eine feste Nightly-Version, Updates und die portablen Downloads siehe die [Installationsanleitung](INSTALLATION.md).
 
 ## Wenn ein Befehl nicht gefunden wird
 

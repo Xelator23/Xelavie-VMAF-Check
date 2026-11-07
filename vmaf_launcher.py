@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""CLI chooser and local browser UI; Python standard library only."""
+"""Argument-based CLI and opt-in local browser UI; Python standard library only."""
 import json
 import os
 from pathlib import Path
@@ -298,32 +298,21 @@ def ui():
     return 0
 
 
-def cli():
-    if __package__:
-        from .vmaf_cli import collect_inputs
-    else:
-        from vmaf_cli import collect_inputs
-    data=collect_inputs()
-    cmd=build_command(data)
-    print('Farbmodus Original:',data['ref-color'] or 'Automatisch','| Encode:',data['enc-color'] or 'Automatisch')
-    print('Automatische Aufloesung und Crop-Erkennung. Weitere Optionen: --help')
-    return subprocess.call(cmd)
-
-
 def main():
     args=sys.argv[1:]
-    if args==['--ui']: return ui()
-    if args==['--cli']: return cli()
-    if args:
-        if '--ui' in args or '--cli' in args: raise ValueError('--ui oder --cli separat aufrufen.')
-        return subprocess.call([sys.executable,'-u',str(ENGINE),*args])
-    print('\nXelavie VMAF Check — Bedienung waehlen\n  1 = CLI (Terminal)\n  2 = UI  (lokaler Browser)\n  0 = Beenden')
-    while True:
-        answer=input('Auswahl [2]: ').strip().lower()
-        if answer in ('1','cli'): return cli()
-        if answer in ('','2','ui'): return ui()
-        if answer in ('0','q'): return 0
-        print('Bitte 1, 2 oder 0 eingeben.')
+    if args==['--gui']: return ui()
+    if '--gui' in args:
+        raise ValueError('--gui separat aufrufen. Dateien und Einstellungen in der GUI auswaehlen.')
+    if '--ui' in args or '--cli' in args:
+        raise ValueError('CLI: ORIGINAL ENCODE [Optionen] angeben. Browser-Oberflaeche: --gui. Hilfe: --help.')
+    if not args or args in (['--help'], ['-h']):
+        print('Xelavie VMAF Check\n'
+              'CLI: xelavie-vmaf-check ORIGINAL ENCODE [Optionen]\n'
+              'GUI: xelavie-vmaf-check --gui\n'
+              'Beispiel: xelavie-vmaf-check "Original.mkv" "Encode.mkv" --percent 25\n'
+              'Ohne Argumente wird diese Hilfe angezeigt. Keine interaktive Eingabe.\n', flush=True)
+        args=['--help']
+    return subprocess.call([sys.executable,'-u',str(ENGINE),*args])
 
 
 if __name__=='__main__':

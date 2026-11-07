@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "xelavie-vmaf-check"
-version = "0.1.0.dev2"
+version = "0.1.0.dev3"
 description = "Local VMAF video comparisons with CLI, browser UI and queue for Windows and Linux"
 readme = "README.md"
 requires-python = ">=3.10"
