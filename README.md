@@ -19,7 +19,9 @@ Unter [Releases](https://github.com/Xelator23/Xelavie-VMAF-Check/releases/tag/ni
 | Windows | `Xelavie-VMAF-Check-0.1.0-nightly.1-Windows.zip` | `vmaf-check.cmd` |
 | Linux | `Xelavie-VMAF-Check-0.1.0-nightly.1-Linux.tar.gz` | `sh ./vmaf-check.sh` |
 
-Entpacke das ganze Paket. Die Pakete enthalten denselben Python-Prüfcode und dieselbe UI, jeweils mit dem passenden Starter. SHA256-Prüfsummen stehen im Release. FFmpeg und Modelle werden bei Bedarf separat heruntergeladen; Treiber werden nicht installiert.
+**Empfohlen: [Paket herunterladen, SHA256 prüfen und erst danach lokal starten](INSTALLATION.md).** Kein `curl | bash`, kein `irm | iex` und keine Administratorrechte für das portable Paket.
+
+Die Pakete enthalten denselben Python-Prüfcode und dieselbe UI, jeweils mit dem passenden Starter. SHA256-Prüfsummen stehen im Release. FFmpeg und Modelle werden bei Bedarf separat heruntergeladen; Treiber werden nicht installiert.
 
 ## Funktionen
 
@@ -57,6 +59,8 @@ Die folgenden Bilder zeigen die echte UI mit **synthetischen Demodaten**. Die We
 ![CLI-Pfadvorschau und Ergebnis – Beispielwerte](docs/images/cli-example.png)
 
 ## Schnellstart
+
+Nach dem Herunterladen und Prüfen gemäß [Installationsanleitung](INSTALLATION.md), im entpackten Programmordner:
 
 ### Windows
 
