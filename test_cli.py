@@ -37,15 +37,15 @@ class CliTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp,contextlib.redirect_stdout(io.StringIO()) as out:
             base=Path(tmp);a=base/'a';b=base/'anderer Ordner';a.mkdir();b.mkdir();(b/'film.mkv').touch()
             with patch.object(c,'path_input',side_effect=['cd ..','cd "anderer Ordner"','dir','film.mkv']) as prompt:
-                self.assertEqual(c.choose_file('Original',a),str(b/'film.mkv'))
-            self.assertEqual(prompt.call_args_list[1].args[1],base)
-            self.assertEqual(prompt.call_args_list[2].args[1],b)
+                self.assertEqual(c.choose_file('Original',a),str((b/'film.mkv').resolve()))
+            self.assertEqual(prompt.call_args_list[1].args[1],base.resolve())
+            self.assertEqual(prompt.call_args_list[2].args[1],b.resolve())
             self.assertIn('Datei   film.mkv',out.getvalue())
     def test_absolute_path_not_appended_to_start_directory(self):
         with tempfile.TemporaryDirectory() as tmp,contextlib.redirect_stdout(io.StringIO()):
             base=Path(tmp);(base/'a').mkdir();(base/'b').mkdir();file=base/'b'/'film.mkv';file.touch()
             with patch.object(c,'path_input',side_effect=[str(file.parent),'film.mkv']):
-                self.assertEqual(c.choose_file('Encode',base/'a'),str(file))
+                self.assertEqual(c.choose_file('Encode',base/'a'),str(file.resolve()))
     def test_cd_completion_only_directories(self):
         with tempfile.TemporaryDirectory() as tmp:
             base=Path(tmp);(base/'Filmordner').mkdir();(base/'Film.mkv').touch()
@@ -75,7 +75,7 @@ class CliTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp,contextlib.redirect_stdout(io.StringIO()):
             base=Path(tmp);(base/'movie.mkv').touch()
             with patch.object(c,'path_input',side_effect=['bad.mkv','"movie.mkv"']):
-                self.assertEqual(c.choose_file('Datei',base),str(base/'movie.mkv'))
+                self.assertEqual(c.choose_file('Datei',base),str((base/'movie.mkv').resolve()))
     def test_separate_saved_directories_and_color_flags(self):
         with tempfile.TemporaryDirectory() as tmp,contextlib.redirect_stdout(io.StringIO()):
             base=Path(tmp);ref=base/'original';enc=base/'encoded';ref.mkdir();enc.mkdir()
