@@ -1,0 +1,250 @@
+XELAVIE VMAF CHECK 0.1.0-nightly.1
+
+Start, UI, CLI-Navigation und Beispielbilder: siehe README.md.
+Dies ist eine Vorabversion. Echte HDR-/HLG-/DV-Videolaeufe sind noch
+nicht vollstaendig validiert; Profil 7 ohne vollstaendige FEL-Rekonstruktion.
+
+FEHLENDE ODER FALSCHE FARBANGABEN
+FFprobe liest Angaben aus Container und/oder Videobitstream. Bleiben
+notwendige Werte unbekannt, kann man bekannte Quellwerte explizit setzen.
+Referenz (ref) und Encode (enc) sind unabhaengig. Es wird nichts von der
+anderen Datei uebernommen und nichts anhand der Aufloesung geraten.
+
+Presets setzen alle vier Werte, einschliesslich Limited Range:
+  --ref-color bt709     --enc-color bt709
+  --ref-color hdr10     --enc-color hdr10
+  --ref-color hlg       --enc-color hlg
+
+Einzelwerte (auch ohne Preset moeglich):
+  --ref-primaries bt709|bt2020
+  --ref-transfer bt709|smpte2084|arib-std-b67
+  --ref-matrix bt709|bt2020nc
+  --ref-range limited|full
+Fuer den Encode lauten die gleichen Optionen --enc-primaries,
+--enc-transfer, --enc-matrix und --enc-range.
+Das Zeichen | bedeutet hier Auswahl, es wird nicht mit eingegeben.
+
+Einzelwerte haben Vorrang vor dem Preset, unabhaengig von der Reihenfolge:
+  --ref-color bt709 --ref-range full
+Nicht angegebene Felder ohne Preset behalten ihre erkannten Werte. Fehlen
+danach weiterhin notwendige Angaben, wird abgebrochen.
+Explizite Angaben ersetzen auch widersprechende vorhandene Tags.
+
+Windows, beide Dateien sind bekanntermassen SDR BT.709 Limited:
+  .\vmaf-check.cmd "D:\Original.mkv" "D:\Encode.mkv" --ref-color bt709 --enc-color bt709 --percent 100
+Linux, nur Encode-Tags fehlen; Encode ist bekanntermassen HDR10 Limited:
+  sh ./vmaf-check.sh "/video/Original.mkv" "/video/Encode.mkv" --enc-color hdr10 --percent 25
+Nur den bekannten Wertebereich ergaenzen:
+  --enc-range limited
+
+WICHTIG: Die Overrides beschreiben, wie vorhandene Pixel zu interpretieren
+sind. Sie machen aus SDR kein HDR und aus HLG kein PQ. Die eigentliche
+HLG/PQ-Konvertierung erfolgt erst danach ueber den vorgesehenen Filter.
+Eine falsche Angabe kann einen irrefuehrenden Score ergeben. Nur bekannte
+Quellwerte setzen; Profile/RPU bei Dolby Vision werden dadurch nicht
+entfernt oder ersetzt. SDR gegen HDR bleibt als Paarung ausgeschlossen.
+
+Die Quellangaben werden vor Crop-Erkennung, Farbraumkonvertierung und
+Skalierung an die Frames gesetzt; die Quelldateien werden nicht editiert.
+summary.json -> color_metadata protokolliert pro Datei:
+detected, overrides, effective, overridden_existing_fields sowie eine
+gegebenenfalls angewendete SDR-Full-zu-Limited-Normalisierung.
+
+AUTOMATISCHE AUFLOESUNG
+FFprobe liest die Aufloesung beider Eingaben. Nach dem Crop wird die
+Referenz proportional auf das aktive Bildraster des Encodes skaliert.
+Beispiel: 3840x2160 -> 1920x1080; mit Scope-Balken eventuell
+3840x1600 -> 1920x800. Kein pauschales Strecken auf 16:9.
+Das Modell wird automatisch gewaehlt: Encode breiter als 2560 oder
+hoeher als 1440 -> 2160-Modell; sonst 1080-Modell.
+--display 1080/2160 ueberschreibt nur die Modellwahl, nicht das Pruefraster.
+Das HDR-Modell kann intern nochmals auf seine kalibrierte Displaygroesse
+skalieren (kurze Seite). Diese Skalierung ist Bestandteil des Modells.
+
+Diese Messung beantwortet: Wie gut ist der Encode bei seiner Zielgroesse?
+Der Aufloesungsverlust gegenueber einer Wiedergabe des Originals in 4K
+wird damit nicht voll bewertet. Dafuer waere ein Vergleich beider Videos
+auf einem gemeinsamen 4K-Displayraster notwendig.
+
+CROP
+--crop auto ist Standard. Zunaechst sieben (bei Bedarf bis zu 13) Referenz-Stichproben von je bis zu drei
+Sekunden erkennen schwarze Balken. Der umfassendste plausible Ausschnitt
+wird verwendet. Bei gleicher Canvas-Proportion wird der Ausschnitt auf
+die Encode-Aufloesung uebertragen. Bei abweichender Canvas-Proportion
+wird auch der Encode untersucht, z.B. wenn dessen Balken bereits entfernt
+wurden. Die aktiven Seitenverhaeltnisse muessen dann zusammenpassen.
+Die Automatik ist keine inhaltliche Bildregistrierung. Asymmetrische
+Beschnitte, dunkle Szenen, Untertitel und wechselnde IMAX/Scope-Formate
+koennen die Heuristik taeuschen. Bei wechselnden Formaten --crop none
+verwenden. Beide Crops und das Pruefraster werden im Bericht gespeichert.
+
+Manuell, Werte jeweils in den ORIGINALPIXELN der betreffenden Datei:
+  --crop 3840:1600:0:280 --crop-encode 1920:800:0:0
+Format: Breite:Hoehe:X:Y. Alle Werte gerade und innerhalb des Bildes.
+
+PRUEFMODI
+--percent 100: alle Frames
+--percent 50: jedes zweite Frame
+--percent 25: jedes vierte Frame
+Immer ueber den gesamten Film, beginnend bei Frame 0. Bei ungerader
+Anzahl wird aufgerundet. Kein Weglassen des Filmendes.
+Die Decoder lesen weiterhin alle Bilder; Laufzeit sinkt nicht zwingend
+proportional. Die Frameanzahl kommt zuerst aus Metadaten; bei fehlenden, ungueltigen
+oder widerspruechlichen Angaben erfolgt ein vollstaendiger Scan.
+Stichproben koennen kurze Fehler uebersehen.
+
+SDR / HDR / HLG / DOLBY VISION
+SDR: explizite BT.709-Metadaten, VMAF-v0.6.1. Full Range wird fuer den
+Vergleich nach Limited Range umgerechnet; Limited bleibt Limited.
+HDR10/PQ: BT.2020/BT.2020nc und vollstaendige Range-Tags,
+HDR-VMAF-v1.1.8. Kein stiller SDR-Ersatz.
+
+HLG: nicht mehr pauschal gesperrt. BT.2020/BT.2020nc-HLG wird ueber
+zscale/zimg in PQ konvertiert. Die festgelegte Normalisierung verwendet
+npl=1000 cd/m2. Das ist eine bestimmte HLG-Wiedergabebedingung und kein
+universeller HLG-Score fuer alle Displays. Konvertierungsfehler stoppen
+den Lauf. HLG und PQ koennen nach Normalisierung verglichen werden.
+
+Dolby Vision: Single-Layer-Profil 5, 8 und 10 mit RPU sind freigeschaltet.
+Profil 10 erfordert AV1. Profil 7 wird wie unten beschrieben vorbereitet.
+Alle Paarungen der Profile 5/7/8/10 sind in der Modusauswahl beruecksichtigt,
+einschliesslich vertauschter Referenz/Encode-Rollen.
+FFprobe muss in der Vorabprobe dekodierte Dolby-Vision-Metadaten liefern.
+libplacebo verarbeitet diese und gibt PQ/BT.2020-Bilder aus. Keine
+dynamische Peak-Erkennung; tonemapping=clip. Bewertet werden die so
+rekonstruierten Bilder, keine Dolby-zertifizierte Display-Wiedergabe
+und keine separate Qualitaet der dynamischen Metadaten.
+
+DV-MODI: PROFIL 7 SINNVOLL VERGLEICHEN
+--dv-mode auto (Standard): Sobald Profil 7 beteiligt ist, wird compatible
+gewaehlt. Ohne Profil 7 wird rendered gewaehlt.
+
+--dv-mode compatible:
+P7 wird mit dovi_tool -m 2 convert --discard in P8.1 ueberfuehrt. Der
+Enhancement-Layer wird verworfen, die RPU passend konvertiert. Der
+HEVC-Basis-Bildstrom wird nicht neu kodiert. Die Arbeitsdatei wird mit
+der Original-CFR-Bildrate remuxt. Danach normalisiert libplacebo die
+vorbereiteten und die uebrigen DV-Eingaben auf PQ/BT.2020.
+Damit sind z.B. P7 vs P5, P7 vs P8.1/P8.4 und P7 vs P10 vergleichbar.
+Das ist ausdruecklich ein KOMPATIBILITAETSVERGLEICH. FEL-Zusatzinformation
+ist nicht Teil der Bewertung. Ein hoher Score beweist weder ihre
+Erhaltung noch die Gleichwertigkeit zur vollstaendigen P7-Wiedergabe.
+Auch die Wirkung der verwendeten Konvertierung ist Teil der Messung.
+
+--dv-mode base-layer:
+Vergleicht die gemeinsame HDR10-Basisschicht. Erlaubt sind P7, P8.1,
+P10.1 und normales HDR10, auf beiden Seiten mit passenden PQ-Tags.
+RPU und bei HEVC die Enhancement-Layer-NALs werden vor dem Dekodieren
+explizit entfernt. So wird nicht eine DV-gerenderte Seite mit einer
+unbearbeiteten HDR10-Seite vermischt. P5, P8.4 und P10.4 haben fuer diesen
+Modus keine passende HDR10-Basis und werden abgelehnt.
+
+--dv-mode rendered:
+Verarbeitet Single-Layer-P5/P8/P10 mit libplacebo. Profil 7 wird in diesem
+Modus abgelehnt, da die vollstaendige EL-Rekonstruktion hier fehlt.
+Fuer eine vollstaendige P7-FEL-Bewertung muessen beide Videos vorher mit
+einem validierten Decoder/Renderer in eine gemeinsame PQ-Darstellung
+gebracht werden. Diese PQ-Videos koennen danach als normale HDR-Eingaben
+verglichen werden. dovi_tool allein ersetzt diese Rekonstruktion nicht.
+
+MEL/FEL: Das Script protokolliert vorhandene disable_residual_flag-Werte
+aus einer kurzen FFprobe-Stichprobe. Das ist keine verlaessliche
+MEL/FEL-Klassifikation fuer den ganzen Film. Der Vergleichsmodus haengt
+deshalb nicht von einer geratenen MEL-Erkennung ab. Fuer MEL und FEL
+wird P7 im Automatikmodus konservativ gleich vorbereitet.
+
+Umfang im Bericht: dv_comparison.mode, scope, original_profiles,
+full_profile7_reconstruction=false sowie alle Vorbereitungsschritte.
+Original-Metadaten bleiben ebenfalls dokumentiert. Legacy-DV-Profile
+4/9 und weitere nicht aufgefuehrte Profile sind nicht implementiert.
+'Alle Paarungen' bezieht sich auf 5, 7, 8 und 10.
+
+BEISPIELE P7 GEGEN P8.1
+Windows, automatischer Kompatibilitaetsvergleich:
+  .\vmaf-check.cmd "D:\Original-P7.mkv" "D:\Encode-P81.mkv" --percent 100
+Linux, explizit gemeinsamer HDR10-Basisvergleich:
+  sh ./vmaf-check.sh "/video/Original-P7.mkv" "/video/Encode-P81.mkv" --percent 50 --dv-mode base-layer
+P10 gegen P5/P8 funktioniert mit demselben Standardaufruf und den
+entsprechenden Dateinamen. Kein manuelles Umstellen des Codecs noetig.
+
+SDR und HDR werden nicht miteinander vermischt. HDR10+ wird hinsichtlich
+seiner PQ-Bilder bewertet, nicht hinsichtlich der dynamischen Wiedergabe.
+Fehlende Farbmetadaten werden nicht geraten. Querformat, quadratische
+Pixel und progressive Bilder sind Voraussetzung.
+
+ALLES PORTABEL NACHLADEN
+Die Starter suchen zuerst Python >=3.10. Fehlt es, laden sie uv 0.13.7
+mit im Starter festgelegter SHA256 herunter. uv beschafft Python 3.12
+aus Astrals python-build-standalone. Beide liegen nur im Temp-Ordner.
+Keine dauerhafte Python-Installation und keine PATH-Aenderung.
+
+Das Python-Script sucht FFmpeg/FFprobe. Fehlende Programme oder benoetigte
+Filter loesen automatisch den Download des aktuellen portablen statischen
+BtbN-Pakets aus. Ein fehlgeschlagener Modell-Vorabtest mit einem lokalen
+Build loest ebenfalls einen einmaligen Versuch mit dem Download aus.
+VMAF/zimg/libplacebo muessen in diesem FFmpeg-Paket einkompiliert sein;
+es gibt keine separate DLL-Installation. Modelle werden automatisch aus
+Netflix/vmaf geladen. Keine Video-Uploads.
+
+Fuer P7-compatible wird vorhandenes dovi_tool bevorzugt oder das passende
+quietvoid/dovi_tool-Release temporaer geladen und gegen seinen
+GitHub-SHA256-Digest geprueft. Eigener Pfad: --dovi-tool PFAD.
+--no-download verlangt fuer diesen Modus vorhandenes dovi_tool.
+
+DV-VORBEREITUNG BRAUCHT TEMP-SPEICHER: Profil-7-Konvertierung und
+Basisschicht-Modus erstellen komprimierte Video-Arbeitskopien.
+Vorher werden konservativ zweimal die Groesse der vorzubereitenden
+Originaldateien plus 1 GiB freier Platz verlangt. Mit --temp-dir kann
+eine grosse Platte gewaehlt werden. Keine unkomprimierten Rohvideos.
+Arbeitskopien werden am Ende geloescht. Frameanzahl vor/nach der
+Vorbereitung wird geprueft; ein inhaltlicher Gleichlauf ist damit allein
+noch nicht bewiesen.
+
+GRENZEN DER AUTOMATIK
+Ein Download kann keine nicht vorhandene Build-Funktion ersetzen.
+Falls auch das aktuelle Paket HDR/libplacebo nicht unterstuetzt, wird
+mit Fehler abgebrochen; ein kompatibler eigener Build kann ueber
+--ffmpeg PFAD --ffprobe PFAD angegeben werden.
+Dolby Vision/libplacebo braucht einen funktionierenden Vulkan-Treiber
+und ein geeignetes Vulkan-Geraet (ggf. Software-Implementierung).
+Systemtreiber/Kernel-Komponenten werden nicht automatisch installiert.
+SDR, HDR10 und HLG verwenden in dieser Pipeline CPU-Filter.
+
+Windows: PowerShell 5.1+ und normales HTTPS-Vertrauen sind erforderlich.
+Linux: Shell, tar, sha256sum, mktemp sowie curl ODER wget sind noetig,
+falls Python fehlt. Diese Standard-Systemwerkzeuge werden vorausgesetzt.
+Auto-Downloads fuer x64/ARM64. Das FFmpeg-Linux-Paket setzt eine passende
+glibc voraus; Alpine/musl ist kein zugesichertes Komplettziel.
+Internet und genuegend Temp-Speicher fuer Programme werden benoetigt;
+keine riesigen temporaeren Rohvideos. TLS-Pruefung bleibt eingeschaltet.
+
+FFmpeg-Archive werden gegen den GitHub-Release-SHA256-Digest geprueft.
+Modell-SHA256 wird protokolliert (keine separate Signaturpruefung).
+Download-Dateien werden am Ende/bei normalen Fehlern entfernt. Bei
+Stromausfall oder hartem Prozessabbruch koennen Temp-Ordner zurueckbleiben.
+--temp-dir setzt den Arbeitsordner des Python-Scripts; der vorgeschaltete
+Python-Bootstrap verwendet System-Temp (Linux: TMPDIR).
+
+--no-download verbietet auch dem Starter Downloads. Dann muessen Python,
+FFmpeg, FFprobe und --model DATEI.json lokal vorliegen.
+--download-tools erzwingt ein frisches FFmpeg-Paket.
+Ein direkter Aufruf von vmaf_check.py setzt vorhandenes Python voraus;
+zum automatischen Python-Download die .cmd/.sh-Datei verwenden.
+
+ZEITLICHE AUSRICHTUNG
+Identische Schnittfassung, gleicher Startframe, gleiche konstante
+Bildrate (CFR) erforderlich. Frameanzahl aus Metadaten oder Scan wird
+verglichen; Zeitstempel
+werden auf Frameindex normalisiert. Das beweist keine inhaltliche
+Synchronitaet. Keine automatische Offset-/Schnittkorrektur. Uneindeutige
+Bildraten werden abgelehnt; Metadaten erkennen nicht jede VFR-Datei.
+
+ERGEBNISSE
+Arbeitsordner/Ergebnisse/Film/Lauf oder --output PFAD:
+summary.json (Mittelwert/Min/Max/P05, Aufloesung, Crop, Quellen, Versionen),
+frames.json, frames.csv, preflight.log und ffmpeg.log.
+Jeder Lauf erhaelt einen neuen Ordner. Bestehendes wird nicht ersetzt.
+P05 ist das untere empirische 5%-Quantil der bewerteten Bilder.
+
+
+Lizenz: MIT fuer den Projektcode; siehe LICENSE und THIRD_PARTY_NOTICES.md.

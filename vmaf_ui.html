@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Xelavie VMAF Check</title>
+<style>
+:root{color-scheme:light dark;--bg:light-dark(#f5f6f8,#14161a);--surface:light-dark(#fff,#1e2127);--text:light-dark(#20252e,#edf0f5);--muted:light-dark(#5d6572,#abb4c2);--line:light-dark(#d7dce3,#3a414c);--accent:light-dark(#2359d5,#9abbff);--onaccent:light-dark(#fff,#132242);--error:light-dark(#a12a25,#ffb0aa)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,sans-serif}main{max-width:1020px;margin:auto;padding:28px 20px}header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:24px}h1{font-size:26px;margin:0}h2{font-size:18px;margin:0 0 14px}p{margin:0}.muted{color:var(--muted);font-size:13px}.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:22px;margin-bottom:18px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.row{display:flex;gap:8px;align-items:center}.row input{flex:1;min-width:0}label{display:block;font-weight:500}input,select,button{font:inherit;color:inherit}input,select{display:block;width:100%;background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:9px 10px;margin-top:5px}button{padding:9px 14px;border:1px solid var(--line);border-radius:7px;background:var(--surface);cursor:pointer}button:hover{filter:brightness(.95)}button:disabled{opacity:.5;cursor:default}button.primary{background:var(--accent);color:var(--onaccent);border-color:var(--accent)}fieldset{border:0;padding:0;margin:0;min-width:0}details{margin-top:18px}summary{cursor:pointer;font-weight:500}details .grid{margin-top:14px}.actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:20px}.notice{border-left:3px solid var(--accent);padding-left:12px;margin:16px 0;color:var(--muted)}#error{color:var(--error);white-space:pre-wrap;margin-top:12px}pre{font:13px/1.5 ui-monospace,monospace;white-space:pre-wrap;overflow-wrap:anywhere}#log{max-height:360px;min-height:100px;overflow:auto;margin:0;padding:14px;background:var(--bg);border-radius:7px}#result{overflow-wrap:anywhere}dialog{width:min(820px,94vw);max-height:85vh;background:var(--surface);color:var(--text);border:1px solid var(--line);border-radius:12px;padding:20px}dialog::backdrop{background:#0008}#filelist{max-height:44vh;overflow:auto;margin:14px 0}#filelist button{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);border-radius:0;overflow-wrap:anywhere}#drives{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.check{display:flex;align-items:center;gap:8px;font-weight:400}.check input{width:auto;margin:0}#picker-error{color:var(--error)}@media(max-width:650px){.grid{grid-template-columns:1fr}main{padding:16px 12px}.panel{padding:16px}header{align-items:flex-start}.row{flex-wrap:wrap}.row input{flex-basis:65%}}
+main{max-width:1320px}.workspace{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:20px;align-items:start}.workspace>*{min-width:0}.progress-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin:22px 0 10px}#percentage{font-size:38px;font-weight:600;font-variant-numeric:tabular-nums}.progress-track{height:12px;border-radius:6px;background:var(--bg);overflow:hidden}#progress-fill{height:100%;width:0;background:var(--accent);border-radius:6px}.progress-track.indeterminate #progress-fill{width:30%;animation:working 1.6s ease-in-out infinite alternate}@keyframes working{to{transform:translateX(230%)}}@media(prefers-reduced-motion:reduce){.progress-track.indeterminate #progress-fill{animation:none}}.timers{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:24px 0}.time-value{font-size:24px;font-variant-numeric:tabular-nums}.progress-footer{display:flex;justify-content:space-between;align-items:center;gap:12px;border-top:1px solid var(--line);padding-top:16px}#step{overflow-wrap:anywhere;margin-top:10px}#result{margin-bottom:10px}#status{margin-bottom:12px}.workspace .row{flex-wrap:wrap}.workspace .row input{flex-basis:180px}@media(max-width:900px){.workspace{grid-template-columns:1fr}}@media(max-width:360px){.timers{grid-template-columns:1fr}}
+.report-files{display:grid;grid-template-columns:110px minmax(0,1fr);gap:8px 12px}.report-files dt{color:var(--muted)}.report-files dd{margin:0;overflow-wrap:anywhere}.report-score{font-size:40px;font-weight:600;font-variant-numeric:tabular-nums;margin:16px 0}.report-stats{display:grid;grid-template-columns:1fr 1fr;gap:18px}.report-stats strong{display:block;font-size:22px;font-weight:500;font-variant-numeric:tabular-nums}.report-frames{margin-top:20px;overflow-wrap:anywhere}#analysis-report[hidden]{display:none}@media(max-width:400px){.report-files,.report-stats{grid-template-columns:1fr}}
+.app{display:grid;grid-template-columns:230px minmax(0,1fr);min-height:100vh}.sidebar{background:var(--surface);border-right:1px solid var(--line);padding:24px 14px}.brand{display:flex;align-items:center;flex-direction:column;margin-bottom:28px}.brand img{width:125px;height:125px;object-fit:contain}.brand span{font:900 26px Georgia,serif;letter-spacing:2px;font-variant:small-caps;color:light-dark(#303944,#d5dce1);text-shadow:2px 2px 0 light-dark(#dbadb1,#811d27);margin-top:7px;white-space:nowrap}nav{display:grid;gap:8px}nav button{text-align:left;border-color:transparent}nav button[aria-pressed=true]{background:var(--accent);color:var(--onaccent)}main{width:100%;min-width:0}.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.stat-value{font-size:30px;font-variant-numeric:tabular-nums}.library-item{overflow-wrap:anywhere}.library-item .actions{justify-content:space-between}.danger{color:var(--error)}#global-error{color:var(--error);white-space:pre-wrap;margin-bottom:16px}[hidden]{display:none!important}.sidebar-path{margin-top:24px;overflow-wrap:anywhere}.workspace{grid-template-columns:1fr}.list-title{font-size:18px;font-weight:600}.group-stat{border-bottom:1px solid var(--line);padding:12px 0}.group-stat:last-child{border:0}@media(min-width:1250px){.workspace{grid-template-columns:1fr 1.15fr}}@media(max-width:1000px){.stats{grid-template-columns:1fr}}@media(max-width:700px){.app{grid-template-columns:1fr}.sidebar{border-right:0;border-bottom:1px solid var(--line);padding:12px}.brand{flex-direction:row;justify-content:center;gap:12px;margin-bottom:12px}.brand img{width:70px;height:70px}nav{display:flex;flex-wrap:wrap}nav button{flex:1;font-size:13px;padding:8px}.sidebar-path{display:none}}
+main{margin:0 auto;align-self:start}
+[data-view="queue"] .panel{padding:16px;margin-bottom:10px;border-radius:8px}[data-view="queue"] h2{font-size:15px;margin-bottom:5px}[data-view="queue"] .actions{margin:10px 0}[data-view="queue"] button{font-size:13px;padding:7px 11px}#queue-overview{margin-top:10px}#queue-active .monitor{border:1px solid var(--line);background:var(--surface);border-radius:8px;margin-bottom:10px;padding:16px}#queue-active .panel{border:0;padding:0;margin:0}#queue-active .monitor>.panel+section{margin-top:12px}#queue-active #current-film{font-size:15px;font-weight:600;color:var(--text);overflow-wrap:anywhere}#queue-active #status{font-size:12px;margin:4px 0}#queue-active #percentage{font-size:16px}#queue-active .progress-head{margin:12px 0 6px;font-size:12px}#queue-active .progress-track{height:7px}#queue-active .timers{display:flex;flex-wrap:wrap;gap:10px 24px;margin:10px 0}#queue-active .timers>div{display:flex;gap:8px;align-items:baseline}#queue-active .time-value{font-size:13px}#queue-active .progress-footer{border:0;padding-top:8px}#queue-active #estimate{font-size:12px}#queue-active details{font-size:13px}#queue-items .library-item h2{overflow-wrap:anywhere}#queue-active #analysis-report{display:none}
+#library-items .result-row{padding:14px 16px;margin-bottom:10px;border-radius:8px}.result-head{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:20px;align-items:center}.result-info{min-width:0}.result-info h2{font-size:14px;font-weight:600;margin:0 0 4px;overflow-wrap:anywhere}.result-info .muted{font-size:12px}.result-score{display:flex;flex-direction:column;font-variant-numeric:tabular-nums}.result-score strong{font-size:18px;font-weight:600}.result-head button{font-size:12px;padding:6px 10px;white-space:nowrap}.result-row details{margin-top:8px;font-size:12px}.result-row pre{margin:10px 0 0;font-size:12px}.result-hint{margin-bottom:10px}@media(max-width:850px){.result-head{grid-template-columns:minmax(0,1fr) auto;gap:10px}.result-info{grid-column:1/-1}.result-head button{justify-self:end}}@media(pointer:coarse){.result-head button,.result-row summary{min-height:44px}.result-row summary{display:flex;align-items:center}}
+</style></head><body><div class="app"><aside class="sidebar"><div class="brand"><img src="logo.png" alt="Xelavie"><span>VMAF Check</span></div><nav aria-label="Hauptnavigation"><button data-page="dashboard" aria-pressed="true">Dashboard</button><button data-page="files" aria-pressed="false">Dateiauswahl</button><button data-page="queue" aria-pressed="false">Warteschlange <span id="queue-count">0</span></button><button data-page="results" aria-pressed="false">Ergebnisse <span id="results-count">0</span></button></nav><p class="muted sidebar-path" id="sidebar-path"></p></aside><main>
+<header><div><h1 id="page-title">Dashboard</h1><p class="muted">Xelavie VMAF Check · Windows & Linux</p></div><button id="quit" type="button">UI beenden</button></header>
+<p id="global-error" role="alert"></p>
+<section data-view="dashboard"><div class="stats"><div class="panel"><p class="muted">Geprüfte Dateien</p><p class="stat-value" id="stats-files">0</p><p class="muted" id="stats-jobs">0 erfolgreiche Prüfungen</p></div><div class="panel"><p class="muted">Gesamte Joblaufzeit</p><p class="stat-value" id="stats-time">00:00:00</p><p class="muted" id="stats-timed"></p></div><div class="panel"><p class="muted">Aktivität</p><p id="stats-active">Bereit</p><p class="muted" id="stats-waiting"></p><button data-goto="queue" type="button">Warteschlange ansehen</button></div></div><div class="grid"><section class="panel"><h2>Durchschnittlicher VMAF</h2><div id="stats-groups"></div><p class="muted">Ungewichtetes Mittel je Vergleichsgruppe. Gelöschte Ergebnisse zählen nicht mit.</p></section><section class="panel"><h2>Zeitaufteilung</h2><p id="stats-measurement"></p><p id="stats-preparation"></p><p id="stats-finalization"></p></section></div></section>
+<section data-view="queue" hidden><div class="panel"><h2>Warteschlange</h2><p class="muted">Ein Film nach dem anderen · Einstellungen bleiben je Auftrag gespeichert.</p><div class="actions"><button id="queue-resume" type="button" class="primary">Starten / Fortsetzen</button><button id="queue-pause" type="button">Nach laufendem Auftrag anhalten</button><button data-goto="files" type="button">Dateien hinzufügen</button></div><p id="queue-state" class="muted"></p><p id="queue-overview" class="muted"></p></div><div id="queue-active" hidden></div><div id="queue-items"></div></section>
+<section data-view="results" hidden><p class="muted" style="margin-bottom:16px">Gespeicherte Ergebnisberichte aus deinen Arbeitsordnern.</p><div id="library-items"></div></section>
+<section data-view="files" hidden><form id="form"><div class="panel"><fieldset id="settings">
+<h2>Original und Encode</h2>
+<label for="reference">Original / Referenz</label><div class="row"><input id="reference" name="reference" required placeholder="Pfad zur Originaldatei"><button type="button" data-browse="reference">Auswählen…</button></div>
+<label for="encoded" style="margin-top:14px">Zu prüfender Encode</label><div class="row"><input id="encoded" name="encoded" required placeholder="Pfad zum Encode"><button type="button" data-browse="encoded">Auswählen…</button></div>
+<p class="muted" style="margin-top:8px">Dateien bleiben auf diesem Rechner. Auflösung und Bildformat werden automatisch erkannt.</p>
+<div class="grid" style="margin-top:20px">
+<label>Prüfanteil<select name="percent"><option value="100">100 % — jedes Bild</option><option value="50">50 % — jedes zweite Bild</option><option value="25">25 % — jedes vierte Bild</option></select></label>
+<label>Dolby-Vision-Vergleich<select name="dv-mode" id="dv-mode"><option value="auto">Automatisch</option><option value="compatible">Kompatibilitätsvergleich</option><option value="base-layer">Nur HDR10-Basisschichten</option><option value="rendered">Single-Layer-DV rendern</option></select></label>
+<label>Balken / Referenz-Crop<input name="crop" value="auto" placeholder="auto, none oder 3840:1600:0:280"></label>
+<label>Modell / Betrachtungsauflösung<select name="display"><option value="auto">Automatisch aus Encode</option><option value="1080">1080</option><option value="2160">2160 / 4K</option></select></label>
+</div>
+<p class="notice" id="scope">Bei Profil 7 wählt die Automatik einen Kompatibilitätsvergleich ohne vollständige FEL-Rekonstruktion.</p>
+<details><summary>Fehlende Farbangaben ergänzen</summary><p class="muted">Nur bekannte Quellwerte setzen. Einzelwerte überschreiben das Preset; diese Angaben konvertieren SDR nicht zu HDR.</p><div class="grid" id="colors"></div></details>
+<details><summary>Weitere Einstellungen</summary><div class="grid">
+<label>Encode-Crop (optional)<input name="crop-encode" placeholder="Leer lassen = automatisch"></label>
+<label>VMAF-Threads<input name="threads" type="number" min="1" max="256" placeholder="Automatisch"></label>
+<label class="check"><input type="checkbox" name="download-tools">Frisches FFmpeg-Paket laden</label>
+</div><p class="muted" style="margin-top:10px">Fehlende Programme und Modelle werden automatisch geladen. P7 benötigt Platz für komprimierte Arbeitskopien. Ein Vulkan-Treiber für DV wird vorausgesetzt.</p></details>
+<label for="work-dir" style="margin-top:20px">Gemeinsamer Arbeitsordner</label><div class="row"><input name="work-dir" id="work-dir" required placeholder="Zum Beispiel D:\prüfung"><button type="button" data-browse="work-dir" data-folder="true">Ordner…</button></div>
+<p class="muted" id="work-hint">Wird für CLI und UI gespeichert. Temp wird aufgeräumt; Ergebnisse bleiben erhalten.</p>
+<div class="actions"><button class="primary" type="submit" id="start">Prüfung starten</button><button type="button" id="enqueue">Zur Warteschlange</button><span class="muted">Original zuerst · identische Schnittfassung erforderlich</span></div>
+</fieldset><div id="error" role="alert"></div></div></form></section><section id="monitor-storage" hidden>
+<div class="monitor"><section class="panel" aria-label="Messfortschritt"><h2>VMAF · Remux → Encode</h2><p id="current-film" class="muted"></p><p id="current-source" class="muted"></p>
+<p id="status" aria-live="polite">Bereit</p>
+<div class="progress-head"><span id="progress-label">Film verarbeitet</span><strong id="percentage">—</strong></div>
+<div class="progress-track" id="progress-track" role="progressbar" aria-label="Film verarbeitet" aria-valuemin="0" aria-valuemax="100"><div id="progress-fill"></div></div>
+<p class="muted" id="step">Noch keine Prüfung gestartet.</p>
+<div class="timers"><div><p class="muted">Aktuelle Laufzeit</p><p class="time-value" id="elapsed">00:00:00</p></div><div><p class="muted">Geschätzte Restzeit</p><p class="time-value" id="remaining">—</p></div></div>
+<p id="measurement-live" class="muted"></p><div class="progress-footer"><p class="muted" id="estimate">Schätzung verfügbar, sobald die Messung läuft.</p><button id="cancel" type="button" disabled>Abbrechen</button></div></section>
+<section class="panel" id="analysis-report" hidden aria-label="Ergebnis der VMAF-Analyse">
+<p class="muted">Analyse erfolgreich abgeschlossen</p><h2>Ergebnis der VMAF-Analyse</h2>
+<dl class="report-files"><dt>Datum</dt><dd id="report-date"></dd><dt>Ziel-Encode</dt><dd id="report-encode"></dd><dt>Remux-Quelle</dt><dd id="report-reference"></dd><dt>Umfang</dt><dd id="report-scope"></dd></dl>
+<p>VMAF Score · Mittelwert</p><p class="report-score" id="report-score"></p><p class="muted" id="report-comparison"></p>
+<div class="report-stats"><div><span class="muted">Durchsatz · nur Messung</span><strong id="report-fps"></strong></div><div><span class="muted">Messzeit</span><strong id="report-measurement"></strong></div><div><span class="muted">Vorbereitung</span><strong id="report-preparation"></strong></div><div><span class="muted">Laufzeit · gesamter Job</span><strong id="report-job"></strong></div></div>
+<p class="report-frames" id="report-frames"></p><p id="report-scored"></p>
+</section>
+<section class="panel"><p id="result"></p><details id="protocol" style="margin-top:0"><summary>Prüfprotokoll</summary><pre id="log" style="margin-top:12px">Noch keine Prüfung gestartet.</pre>
+<details><summary>Ausgeführter Befehl</summary><pre id="command"></pre></details></details></section></div>
+<p class="muted">Teststand: Bedienung und Offline-Logik geprüft; echte HDR-/DV-Videoläufe noch nicht validiert. Kein angezeigter Fortschritt ist ein geschätzter VMAF-Wert.</p>
+</section></main></div>
+<dialog id="picker" aria-labelledby="picker-title"><h2 id="picker-title">Lokale Datei auswählen</h2><div class="row"><input id="location" aria-label="Ordnerpfad"><button id="go" type="button">Öffnen</button><button id="up" type="button">↑ Ebene</button></div><div id="drives"></div><div id="filelist"></div><p id="picker-error" role="alert"></p><p id="truncated" class="muted"></p><div class="actions"><button id="choose-folder" type="button" class="primary">Diesen Ordner wählen</button><button id="close-picker" type="button">Schließen</button></div></dialog>
+<script>
+const $=id=>document.getElementById(id);
+let running=false,closed=false,polling=false,pickTarget=null,pickFolder=false,currentDirectory='',parentDirectory='',lastPhase='';
+const choices={color:[['','Erkannte Angaben verwenden'],['bt709','BT.709 · Limited'],['hdr10','HDR10/PQ · Limited'],['hlg','HLG · Limited']],primaries:[['','Unverändert'],['bt709','BT.709'],['bt2020','BT.2020']],transfer:[['','Unverändert'],['bt709','BT.709'],['smpte2084','PQ / SMPTE 2084'],['arib-std-b67','HLG']],matrix:[['','Unverändert'],['bt709','BT.709'],['bt2020nc','BT.2020nc']],range:[['','Unverändert'],['limited','Limited'],['full','Full']]};
+for(const [part,label] of [['color','Preset'],['primaries','Primärfarben'],['transfer','Transferfunktion'],['matrix','Farbmatrix'],['range','Wertebereich']]){
+ for(const [side,title] of [['ref','Original'],['enc','Encode']]){
+  const l=document.createElement('label');l.textContent=title+' · '+label;
+  const s=document.createElement('select');s.name=side+'-'+part;
+  for(const [value,text] of choices[part])s.add(new Option(text,value));
+  l.append(s);$('colors').append(l);
+ }
+}
+async function api(path,data){
+ const options=data===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)};
+ const response=await fetch(path,options);const result=await response.json();
+ if(!response.ok)throw new Error(result.error||'Anfrage fehlgeschlagen');return result;
+}
+function formData(){const data=Object.fromEntries(new FormData($('form')).entries());data['download-tools']=$('form').elements['download-tools'].checked;return data;}
+$('form').addEventListener('submit',async event=>{
+ event.preventDefault();$('error').textContent='';$('start').disabled=true;
+ try{await api('start',formData());document.querySelector('[data-page="queue"]').click();await poll();}catch(error){$('error').textContent=error.message;}finally{if(!running)$('start').disabled=false;}
+});
+$('cancel').addEventListener('click',async()=>{try{await api('cancel',{});$('cancel').disabled=true;}catch(e){$('error').textContent=e.message;}});
+$('quit').addEventListener('click',async()=>{
+ if(running&&!confirm('Laufende Prüfung abbrechen und UI beenden?'))return;
+ try{await api('shutdown',{});closed=true;$('settings').disabled=true;$('cancel').disabled=true;$('quit').disabled=true;$('status').textContent='UI wird beendet. Dieser Tab kann geschlossen werden.';}catch(e){$('error').textContent=e.message;}
+});
+$('dv-mode').addEventListener('change',()=>{
+ $('scope').textContent=({'auto':'Bei Profil 7 wählt die Automatik einen Kompatibilitätsvergleich ohne vollständige FEL-Rekonstruktion.','compatible':'P7 wird zu P8.1 vorbereitet. Zusätzliche FEL-Bildinformationen werden nicht bewertet.','base-layer':'Nur gemeinsame HDR10-Basis: P7, P8.1, P10.1 oder HDR10. Keine DV-Metadatenbewertung.','rendered':'Single-Layer-P5/P8/P10 nach PQ. Profil 7 wird in diesem Modus abgelehnt.'})[$('dv-mode').value];
+});
+async function poll(){
+ if(closed||polling)return;polling=true;
+ try{
+  const data=await api('status');running=data.running;$('settings').disabled=false;$('start').disabled=running;$('cancel').disabled=!running||data.phase==='Wird abgebrochen';
+  $('stats-active').textContent=running?'Eine Prüfung läuft · '+(Number.isFinite(data.percent)?data.percent.toFixed(1)+' %':data.step):data.phase;
+  $('status').textContent=data.phase;
+  if(data.phase==='Fehler'&&lastPhase!=='Fehler')$('protocol').open=true;
+  if(data.running&&lastPhase!=='Laeuft'&&data.phase==='Laeuft')$('protocol').open=false;
+  lastPhase=data.phase;
+  const hasPercent=Number.isFinite(data.percent), hasRemaining=Number.isFinite(data.remaining);
+  $('percentage').textContent=hasPercent?new Intl.NumberFormat('de-DE',{maximumFractionDigits:1}).format(data.percent)+' %':'—';
+  $('progress-fill').style.width=hasPercent?data.percent+'%':'';
+  $('progress-track').classList.toggle('indeterminate',running&&!hasPercent);
+  if(hasPercent)$('progress-track').setAttribute('aria-valuenow',data.percent);else $('progress-track').removeAttribute('aria-valuenow');
+  $('progress-label').textContent=hasPercent?'Film verarbeitet':running?'Vorbereitung läuft':'Film verarbeitet';
+  $('step').textContent=data.phase==='Fertig'?'Messung und Ergebnisprüfung abgeschlossen.':data.step||data.phase;
+  $('elapsed').textContent=clock(data.elapsed||0);
+  $('queue-active').hidden=!running;
+  $('measurement-live').textContent=Number.isFinite(data.measurement_seconds)?'Messzeit '+clock(data.measurement_seconds)+(Number.isFinite(data.measurement_fps)?' · '+data.measurement_fps.toFixed(1)+' FPS (nur Messung)':''):'';
+  $('remaining').textContent=hasRemaining?(data.remaining?'ca. ':'')+clock(data.remaining):'—';
+  $('estimate').textContent=data.phase==='Fertig'?'Gesamtlaufzeit: '+clock(data.elapsed||0):hasRemaining?'Gesamtdauer geschätzt: ca. '+clock((data.elapsed||0)+data.remaining):running?'Restzeit wird aus dem Messfortschritt geschätzt.':'Keine laufende Schätzung.';
+  const bottom=$('log').scrollHeight-$('log').scrollTop-$('log').clientHeight<40;
+  $('log').textContent=data.logs.join('\n')||'Noch keine Prüfung gestartet.';if(bottom)$('log').scrollTop=$('log').scrollHeight;
+  $('result').textContent=data.result?'Ergebnisse: '+data.result:'';
+  $('command').textContent=data.command.map(s=>JSON.stringify(s)).join(' ');
+  renderReport(data.report);
+ }catch(error){$('status').textContent='Lokaler Dienst nicht erreichbar.';}finally{polling=false;}
+}
+function renderReport(report){
+ $('analysis-report').hidden=!report;if(!report)return;
+ const number=(n,d=0)=>new Intl.NumberFormat('de-DE',{minimumFractionDigits:d,maximumFractionDigits:d}).format(n);
+ const filename=path=>String(path).split(/[\\/]/).pop();
+ $('report-date').textContent=new Date(report.completed_at).toLocaleString('de-DE');
+ $('report-encode').textContent=filename(report.encoded);$('report-reference').textContent=filename(report.reference);
+ $('report-scope').textContent='Kompletter Film · '+report.percent+' % der Frames bewertet';
+ $('report-score').textContent=number(report.mean,6);$('report-comparison').textContent=report.dv_comparison.scope;
+ $('report-fps').textContent=number(report.timing.measurement_fps,2)+' FPS';
+ $('report-measurement').textContent=clock(report.timing.measurement_seconds);
+ $('report-preparation').textContent=clock(report.timing.preparation_seconds);
+ $('report-job').textContent=clock(report.timing.job_seconds);
+ $('report-frames').textContent='Frames verarbeitet: '+number(report.total_frames)+' / '+number(report.total_frames);
+ $('report-scored').textContent='Frames bewertet: '+number(report.scored_frames)+' / '+number(Math.ceil(report.total_frames/report.subsample));
+}
+function clock(seconds){seconds=Math.max(0,Math.floor(seconds));return [Math.floor(seconds/3600),Math.floor(seconds/60)%60,seconds%60].map(n=>String(n).padStart(2,'0')).join(':');}
+function choose(path){$(pickTarget).value=path;$(pickTarget).dispatchEvent(new Event('change'));$('picker').close();}
+let browseSequence=0;
+async function openDirectory(path){
+ const sequence=++browseSequence;
+ $('picker-error').textContent='';
+ try{
+  const data=await api('browse?path='+encodeURIComponent(path));if(sequence!==browseSequence)return;currentDirectory=data.path;parentDirectory=data.parent;$('location').value=data.path;
+  $('filelist').replaceChildren();$('drives').replaceChildren();
+  for(const drive of data.drives){const button=document.createElement('button');button.textContent=drive;button.onclick=()=>openDirectory(drive);$('drives').append(button);}
+  for(const [items,folder] of [[data.directories,true],[pickFolder?[]:data.files,false]])for(const item of items){
+   const button=document.createElement('button');button.textContent=(folder?'Ordner · ':'Datei · ')+item.name;button.onclick=()=>folder?openDirectory(item.path):choose(item.path);$('filelist').append(button);
+  }
+  $('truncated').textContent=data.truncated?'Liste auf 1000 Einträge je Typ begrenzt. Pfad kann direkt eingegeben werden.':'';
+ }catch(error){if(sequence===browseSequence)$('picker-error').textContent=error.message;}
+}
+for(const button of document.querySelectorAll('[data-browse]'))button.addEventListener('click',()=>{
+ pickTarget=button.dataset.browse;pickFolder=button.dataset.folder==='true';$('choose-folder').hidden=!pickFolder;
+ $('picker-title').textContent=pickFolder?'Lokalen Ordner auswählen':'Lokale Videodatei auswählen';$('picker').showModal();openDirectory($(pickTarget).value||currentDirectory);
+});
+$('go').onclick=()=>openDirectory($('location').value);$('up').onclick=()=>openDirectory(parentDirectory);
+$('location').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();openDirectory($('location').value);}});
+$('choose-folder').onclick=()=>choose(currentDirectory);$('close-picker').onclick=()=>$('picker').close();
+$('work-dir').addEventListener('change',async()=>{try{await api('settings',{work_dir:$('work-dir').value});$('work-hint').textContent='Gespeichert · Unterordner: Temp und Ergebnisse';}catch(e){$('error').textContent=e.message;}});
+async function initialize(){try{const settings=await api('settings');$('work-dir').value=settings.work_dir;}catch(e){$('error').textContent='Arbeitsordner konnte nicht geladen werden: '+e.message;}await poll();setInterval(poll,1000);}
+initialize();
+</script><script src="vmaf_navigation.js"></script></body></html>
