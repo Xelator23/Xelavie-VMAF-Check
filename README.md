@@ -1,4 +1,4 @@
-<p align="center"><img src="xelavie.png" width="128" alt="Xelavie Logo"></p>
+![Xelavie VMAF Check – Compare · Analyze · Quality](xelavie-banner.png)
 
 # Xelavie VMAF Check
 
