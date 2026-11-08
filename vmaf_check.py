@@ -27,7 +27,7 @@ import urllib.error
 import zipfile
 from fractions import Fraction
 
-__version__ = '0.1.0-nightly.6'
+__version__ = '0.1.0-nightly.7'
 
 COLOR_FIELDS = {'primaries':'color_primaries', 'transfer':'color_transfer',
                 'matrix':'color_space', 'range':'color_range'}
@@ -180,7 +180,8 @@ def download_tools(root, manifest):
     if not asset:
         raise RuntimeError('Kein passendes Download-Paket: ' + name)
     url = asset['browser_download_url']
-    if not url.startswith('https://github.com/BtbN/FFmpeg-Builds/releases/download/'):
+    if not url.startswith(('https://github.com/BtbN/FFmpeg-Builds/releases/download/',
+                           'https://github.com/FFmpeg-Builds/FFmpeg-Builds/releases/download/')):
         raise RuntimeError('Unerwartete Download-Quelle.')
     archive = root / name
     sha = fetch(url, archive)

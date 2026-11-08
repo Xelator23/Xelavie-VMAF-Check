@@ -1,6 +1,6 @@
 # Commands
 
-Alle CLI-Argumente für **Xelavie VMAF Check 0.1.0-nightly.6**. Die CLI wird über Dateipfade und Flags bedient; ohne Argumente erscheint eine kurze Starthilfe, mit `--help` die vollständige Hilfe. Es gibt keine interaktiven Rückfragen.
+Alle CLI-Argumente für **Xelavie VMAF Check 0.1.0-nightly.7**. Die CLI wird über Dateipfade und Flags bedient; ohne Argumente erscheint eine kurze Starthilfe, mit `--help` die vollständige Hilfe. Es gibt keine interaktiven Rückfragen.
 
 [Start und Hilfe](#start-und-hilfe) · [Prüfung](#prüfung) · [Crop](#crop) · [Farbangaben](#farbangaben) · [Dolby Vision](#dolby-vision) · [Programme und Modelle](#programme-und-modelle) · [Ordner](#ordner) · [Beispiele](#beispiele)
 

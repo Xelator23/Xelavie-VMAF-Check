@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.0-nightly.7
+
+- FFmpeg-Download nach dem Umzug zu `FFmpeg-Builds/FFmpeg-Builds` repariert; die bisherige Adresse bleibt kompatibel.
+- HTTPS- und SHA256-Prüfung bleiben aktiv. Keine Änderungen an der Videoanalyse.
+
 ## 0.1.0-nightly.6
 
 - `--gui` startet unter Windows und Linux im Hintergrund; das Terminal kann anschließend geschlossen werden.
