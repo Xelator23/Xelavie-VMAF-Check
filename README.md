@@ -1,8 +1,17 @@
 ![Xelavie VMAF Check – Compare · Analyze · Quality](xelavie-banner.png)
 
-# Xelavie VMAF Check
+## Index – direkt zum Thema
 
-[Commands – alle Argumente und Beispiele](COMMANDS.md) · [Installation](INSTALLATION.md) · [uv und Git einrichten](UV_UND_GIT.md)
+| Installation und Start | Bedienung und weitere Infos |
+| --- | --- |
+| [uv und Git installieren](#uv-und-git-installieren) | [Commands – alle Argumente](COMMANDS.md) |
+| [VMAF Check mit uv installieren](#installation-über-uv-windows-und-linux) | [Bedienung und Warteschlange](#bedienung) |
+| [Portable-Downloads und Wheel](#portable-und-optionales-wheel) | [GUI im Hintergrund](#gui-im-hintergrund) |
+| [Filme angeben und prüfen](#filme-prüfen--nach-der-installation) | [Funktionen](#funktionen) · [Beispielbilder](#beispielbilder) |
+| [Portable-Schnellstart](#schnellstart) | [SDR, HDR, Dolby Vision und Grenzen](#vergleichsbedingungen-und-grenzen) |
+| [Updates](#updates) · [Installationsanleitung](INSTALLATION.md) | [Voraussetzungen](#voraussetzungen-und-downloads) · [Tests](#entwicklung-und-tests) · [Lizenz](#lizenz-und-verwendete-projekte) |
+
+# Xelavie VMAF Check
 
 **Lokale Videoqualitätsprüfung für Windows und Linux – mit CLI, Browser-UI und Warteschlange.**
 
@@ -37,6 +46,43 @@ xelavie-vmaf-check "/mnt/originale/Film.mkv" "/mnt/encodes/Film.mkv" --percent 2
 | Dateien über die Browser-Oberfläche auswählen | `xelavie-vmaf-check --gui` |
 
 Portable: Den Programmnamen unter Windows durch `.\vmaf-check.cmd`, unter Linux durch `sh ./vmaf-check.sh` ersetzen. Die beiden Dateipfade und Optionen bleiben gleich. [Weitere Beispiele und alle Argumente](COMMANDS.md).
+
+## uv und Git installieren
+
+Für die Installation direkt aus GitHub brauchst du **uv und Git**. Installiere fehlende Voraussetzungen einmal selbst; Xelavie VMAF Check installiert sie nicht automatisch. Sind `uv --version` und `git --version` bereits erfolgreich, geht es direkt mit [VMAF Check installieren](#installation-über-uv-windows-und-linux) weiter.
+
+### Windows – PowerShell
+
+Mit vorhandenem WinGet:
+
+```powershell
+winget install --id astral-sh.uv -e --source winget
+winget install --id Git.Git -e --source winget
+```
+
+Danach PowerShell vollständig schließen und neu öffnen. Falls `winget` fehlt: [App-Installer einrichten und PATH-Hilfe](UV_UND_GIT.md#windows-10--11).
+
+### Linux – Ubuntu / Debian
+
+```sh
+sudo apt update
+sudo apt install git pipx
+pipx install uv
+pipx ensurepath
+```
+
+Danach ein neues Terminal öffnen; falls uv noch nicht gefunden wird, ab- und wieder anmelden. `pipx install uv` ohne `sudo` ausführen. Andere Distributionen sowie Hilfe bei fehlendem pipx: [Linux-Anleitung](UV_UND_GIT.md#linux).
+
+### Installation kontrollieren
+
+```sh
+uv --version
+git --version
+```
+
+Beide Befehle sollten eine Versionsnummer ausgeben. Weiter geht es im nächsten Abschnitt mit der Installation von VMAF Check.
+
+Diese Wege verwenden Paketverwaltungen und benötigen kein `curl | bash` oder `irm | iex`. Quellen: [offizielle uv-Installation](https://docs.astral.sh/uv/getting-started/installation/), [Git für Windows](https://git-scm.com/install/windows). Die [ausführliche Anleitung für uv und Git](UV_UND_GIT.md) enthält weitere Distributionen, Fehlerhilfe und Updates.
 
 ## Installation über uv (Windows und Linux)
 
