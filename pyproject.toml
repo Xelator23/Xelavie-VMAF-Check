@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "xelavie-vmaf-check"
-version = "0.1.0.dev8"
+version = "0.1.0.dev9"
 description = "Local VMAF video comparisons with CLI, browser UI and queue for Windows and Linux"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -23,8 +23,13 @@ xelavie-vmaf-check = "xelavie_vmaf_check:main"
 [tool.hatch.build.targets.wheel]
 packages = ["xelavie_vmaf_check"]
 
+[tool.hatch.build.hooks.custom]
+path = "hatch_build.py"
+
 [tool.hatch.build.targets.wheel.force-include]
 "vmaf_check.py" = "xelavie_vmaf_check/vmaf_check.py"
+"vmaf_hdr.py" = "xelavie_vmaf_check/vmaf_hdr.py"
+"bin" = "xelavie_vmaf_check/bin"
 "vmaf_launcher.py" = "xelavie_vmaf_check/vmaf_launcher.py"
 "vmaf_background.py" = "xelavie_vmaf_check/vmaf_background.py"
 "vmaf_cli.py" = "xelavie_vmaf_check/vmaf_cli.py"
@@ -37,4 +42,4 @@ packages = ["xelavie_vmaf_check"]
 "THIRD_PARTY_NOTICES.md" = "xelavie_vmaf_check/THIRD_PARTY_NOTICES.md"
 
 [tool.hatch.build.targets.sdist]
-include = ["/xelavie_vmaf_check", "/vmaf*.py", "/vmaf_ui.html", "/vmaf_navigation.js", "/xelavie.png", "/download_windows.ps1", "/README.md", "/LICENSE", "/THIRD_PARTY_NOTICES.md", "/pyproject.toml"]
+include = ["/xelavie_vmaf_check", "/vmaf*.py", "/vmaf_ui.html", "/vmaf_navigation.js", "/xelavie.png", "/download_windows.ps1", "/README.md", "/LICENSE", "/THIRD_PARTY_NOTICES.md", "/pyproject.toml", "/hatch_build.py", "/native/*.c", "/native/*.py", "/native/*.json", "/bin"]

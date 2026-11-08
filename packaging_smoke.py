@@ -14,6 +14,10 @@ from urllib.request import urlopen, Request, build_opener, ProxyHandler
 def main():
     from xelavie_vmaf_check import vmaf_launcher as launcher
     from xelavie_vmaf_check import vmaf_cli, vmaf_check, vmaf_settings, vmaf_background
+    from xelavie_vmaf_check import vmaf_hdr
+    native=subprocess.run([vmaf_hdr.worker_path(),'--version'],capture_output=True,text=True,timeout=10)
+    assert native.returncode==0,native.stderr
+    assert 'protocol=2' in native.stdout and 'sparse25=1' in native.stdout
     assert 'site-packages' in str(Path(launcher.__file__).resolve())
     version = importlib.metadata.version('xelavie-vmaf-check')
     assert vmaf_check.__version__.replace('-nightly.', '.dev') == version

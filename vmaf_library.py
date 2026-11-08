@@ -150,6 +150,12 @@ class Queue:
             if self.job.snapshot()['running']: raise ValueError('Ergebnisse nach der laufenden Pruefung loeschen.')
             protected = {Path(entry['report'][key]).resolve() for key in ('reference','encoded')}
             names = ('frames.json','frames.csv','ffmpeg.log','preflight.log','summary.json')
+            names += ('vulkan.log','hdr-probe-pq.log','hdr-probe-unknown.log')
+            names += tuple(base+suffix for base in ('ffmpeg.log','preflight.log')
+                           for suffix in ('.decoder0.log','.decoder1.log','.commands.json',
+                                          '.decoder0.progress','.decoder1.progress','.sampling.json'))
+            names += tuple(side+'-'+operation+'.log' for side in ('reference','encoded')
+                           for operation in ('extract','convert','remux','base-layer'))
             targets = [folder/name for name in names if (folder/name).exists()]
             for target in targets:
                 if target.is_symlink() or target.resolve().parent != folder or target.resolve() in protected:

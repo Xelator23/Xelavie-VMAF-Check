@@ -1,6 +1,6 @@
 # Separat bezogene Werkzeuge und Modelle
 
-Die MIT-Lizenz dieses Repositorys gilt für den Xelavie-VMAF-Check-Projektcode. Sie ersetzt nicht die Lizenzbedingungen der folgenden unabhängigen Projekte. Deren Programme und Modelle sind nicht in den Release-Archiven gebündelt; die Anwendung lädt sie bei Bedarf separat.
+Die MIT-Lizenz dieses Repositorys gilt für den Xelavie-VMAF-Check-Projektcode. Sie ersetzt nicht die Lizenzbedingungen der folgenden unabhängigen Projekte. Der native HDR-Worker bündelt statisch Netflix libvmaf, zimg und graphengine. Deren Lizenztexte und festgelegte Quellen stehen unter `bin/<Plattform>/licenses/`; der reproduzierbare Build steht unter `native/`. FFmpeg, dovi_tool, MKVToolNix, Mesa und Modelle werden separat bezogen.
 
 | Projekt | Verwendung / Lizenzinformationen |
 | --- | --- |
@@ -10,7 +10,10 @@ Die MIT-Lizenz dieses Repositorys gilt für den Xelavie-VMAF-Check-Projektcode. 
 | [dovi_tool](https://github.com/quietvoid/dovi_tool) | Dolby-Vision-Vorbereitung; Upstream-Lizenz beachten. |
 | [libplacebo](https://code.videolan.org/videolan/libplacebo) | HDR-/DV-Verarbeitung innerhalb geeigneter FFmpeg-Builds. |
 | [zimg](https://github.com/sekrit-twc/zimg) | Farbkonvertierung innerhalb geeigneter FFmpeg-Builds. |
-| [MKVToolNix](https://mkvtoolnix.download/) | Separater GPL-Download zum Remuxen der Profil-7-Arbeitskopien; wird nicht im Paket gebündelt. |
+| [graphengine](https://github.com/sekrit-twc/graphengine) | Abhängigkeit des im HDR-Worker gebündelten zimg; Lizenztext liegt beim Worker. |
+| GCC-/MinGW-Laufzeit, unter Linux glibc | Statische Laufzeitanteile im nativen Worker. Lizenzhinweise einschließlich Laufzeitausnahmen liegen ebenfalls beim Worker; dessen Quelltext und Buildskript ermöglichen den Neubau. |
+| [MKVToolNix](https://mkvtoolnix.download/) | Separater GPL-Download für die Profil-7-Arbeitskopie. |
+| [Mesa](https://www.mesa3d.org/) / [build-mesa](https://github.com/mmozeiko/build-mesa) | Software-Vulkan/Lavapipe; unter Windows bei Bedarf separater, SHA256-geprüfter Download. |
 | [uv](https://github.com/astral-sh/uv) | Voraussetzung für die uv-Installation; optional vorhandenes Werkzeug für die portable Variante. Wird nicht mitgeliefert oder automatisch installiert. |
 | [Python](https://www.python.org/psf/license/) / [python-build-standalone](https://github.com/astral-sh/python-build-standalone) | Optional heruntergeladene Laufzeit. |
 

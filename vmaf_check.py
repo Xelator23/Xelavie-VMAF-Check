@@ -18,8 +18,10 @@ import time
 from datetime import datetime
 if __package__:
     from .vmaf_settings import work_directory, save_work_directory
+    from . import vmaf_hdr
 else:
     from vmaf_settings import work_directory, save_work_directory
+    import vmaf_hdr
 import tarfile
 import tempfile
 import urllib.request
@@ -27,7 +29,7 @@ import urllib.error
 import zipfile
 from fractions import Fraction
 
-__version__ = '0.1.0-nightly.8'
+__version__ = '0.1.0-nightly.9'
 
 COLOR_FIELDS = {'primaries':'color_primaries', 'transfer':'color_transfer',
                 'matrix':'color_space', 'range':'color_range'}
@@ -188,7 +190,7 @@ def download_tools(root, manifest):
     digest = asset.get('digest')
     if not digest or digest != 'sha256:' + sha:
         raise RuntimeError('SHA256 fehlt in der Release-API oder stimmt nicht ueberein.')
-    manifest.append({'url': url, 'sha256': sha, 'verified_release_digest': True})
+    manifest.append({'url': url, 'sha256': sha, 'verified_release_digest': True,'component':'ffmpeg'})
     unpack(archive, root / 'tools')
     suffix = '.exe' if system == 'Windows' else ''
     result = []
@@ -209,11 +211,13 @@ def probe(exe, path):
     return data['streams'][0]
 
 
-def required_filters(ffmpeg, kinds):
+def required_filters(ffmpeg, kinds, sampling=False):
     listing = run([ffmpeg, '-hide_banner', '-filters'])
-    needed = {'libvmaf','cropdetect','scale'}
-    if 'hlg' in kinds: needed.add('zscale')
+    needed = {'cropdetect','scale'}
+    if any(k in ('hdr','hlg','dv') for k in kinds): needed.add('zscale')
+    else: needed.add('libvmaf')
     if 'dv' in kinds: needed.add('libplacebo')
+    if sampling:needed.update(('select','split'))
     missing = [name for name in needed if not re.search(r'\b'+name+r'\b',listing)]
     if missing:
         raise RuntimeError('FFmpeg-Filter fehlen: '+', '.join(sorted(missing)))
@@ -313,16 +317,6 @@ def download_dovi(root, manifest):
     return str(candidates[0])
 
 
-def logged(cmd, log):
-    with open(log,'w',encoding='utf-8') as file:
-        p = subprocess.Popen([str(x) for x in cmd],stdout=file,stderr=subprocess.STDOUT)
-        try:
-            code = p.wait()
-        except BaseException:
-            p.kill(); p.wait(); raise
-    if code: raise RuntimeError('Vorbereitung fehlgeschlagen: '+str(log)+'\n'+Path(log).read_text(encoding='utf-8',errors='replace')[-3000:])
-
-
 def download_mkvmerge(root, manifest):
     if platform.machine().lower() not in ('amd64','x86_64'):
         raise RuntimeError('MKVToolNix fuer diese Architektur bitte mit --mkvmerge angeben.')
@@ -350,6 +344,65 @@ def download_mkvmerge(root, manifest):
                         'export APPDIR\nexport ARGV0=mkvmerge\nexec "$APPDIR/AppRun" "$@"\n',encoding='utf-8')
     launcher.chmod(0o755)
     return str(launcher)
+
+
+class DVBackendTooOld(RuntimeError):
+    pass
+
+
+def configure_cpu_vulkan(ffmpeg, root, manifest, no_download=False, icd=None):
+    icd=icd or os.environ.get('VMAF_VULKAN_ICD') or os.environ.get('VK_DRIVER_FILES') or os.environ.get('VK_ICD_FILENAMES')
+    if not icd and os.name!='nt':
+        candidates=list(Path('/usr/share/vulkan/icd.d').glob('*lvp*.json'))
+        if candidates:icd=str(candidates[0])
+    if not icd and os.name=='nt' and not no_download:
+        if platform.machine().lower() not in ('amd64','x86_64'):
+            raise RuntimeError('Software-Vulkan auf ARM64 bitte mit --vulkan-icd angeben.')
+        archive=root/'lavapipe.7z';dest=root/'lavapipe';dest.mkdir()
+        url='https://github.com/mmozeiko/build-mesa/releases/download/26.2.6/mesa-lavapipe-x64-26.2.6.7z'
+        expected='4ed980046a8d42de4efa74085f00e238a51c774b854d63ecece6dfee59ab3bf3'
+        print('Lade temporaeres CPU-Vulkan-Paket ...',flush=True)
+        if fetch(url,archive)!=expected:raise RuntimeError('Lavapipe SHA256 stimmt nicht.')
+        manifest.append({'url':url,'sha256':expected,'verified_pinned_digest':True})
+        tar=shutil.which('tar.exe')
+        if not tar:raise RuntimeError('Windows tar.exe fehlt; lokalen Lavapipe-Treiber mit --vulkan-icd angeben.')
+        # Extract only these two known files from the pinned archive.
+        run([tar,'-xf',archive,'-C',dest,'vulkan_lvp.dll','lvp_icd.x86_64.json'])
+        icd=str(dest/'lvp_icd.x86_64.json')
+    if icd:
+        icd=str(Path(icd).resolve(strict=True))
+        os.environ['VK_DRIVER_FILES']=icd;os.environ['VK_ICD_FILENAMES']=icd
+    # Disable implicit GPU overlays for this job process only.
+    os.environ['VK_LOADER_LAYERS_DISABLE']='~implicit~'
+    cmd=[ffmpeg,'-hide_banner','-v','verbose',*dv_device_args('dv'),'-f','lavfi','-i','color=size=32x32',
+         '-frames:v','1','-vf','libplacebo=format=yuv420p10le','-f','null','-']
+    p=subprocess.run(cmd,capture_output=True,text=True,encoding='utf-8',errors='replace',timeout=60)
+    (root/'vulkan-probe.log').write_text(p.stderr,encoding='utf-8')
+    if p.returncode or 'llvmpipe' not in p.stderr:
+        raise RuntimeError('CPU-Vulkan nicht verfuegbar. Mesa Lavapipe und Vulkan-Loader benoetigt; '
+                           '--vulkan-icd kann einen lokalen Treiber angeben.\n'+p.stderr[-2000:])
+    version=re.search(r'Initialized libplacebo v(\d+)\.(\d+)\.(\d+)',p.stderr)
+    if not version or tuple(map(int,version.groups()))<(7,387,0):
+        raise DVBackendTooOld('DV benoetigt fuer den validierten CPU-Pfad libplacebo >= 7.387.0. '
+                              'Ein aktuelles FFmpeg-Paket verwenden; aeltere Renderer liefern abweichende Bilder.')
+    renderer_threads=os.environ.get('LP_NUM_THREADS')
+    thread_label=(renderer_threads+' (LP_NUM_THREADS)') if renderer_threads is not None else 'automatisch'
+    print('DV-Verarbeitung: CPU / Mesa Lavapipe (keine GPU). Mesa-Threads: '+thread_label+'.',flush=True)
+    # This is independent of libvmaf's --threads setting. Record external
+    # renderer limits so benchmarks cannot silently compare different budgets.
+    return {'device':'llvmpipe','gpu':False,'icd':icd,'libplacebo_version':'.'.join(version.groups()),
+            'renderer_threads':renderer_threads if renderer_threads is not None else 'auto',
+            'renderer_threads_source':'LP_NUM_THREADS' if renderer_threads is not None else 'Mesa default','probe':p.stderr}
+
+
+def logged(cmd, log):
+    with open(log,'w',encoding='utf-8') as file:
+        p = subprocess.Popen([str(x) for x in cmd],stdout=file,stderr=subprocess.STDOUT)
+        try:
+            code = p.wait()
+        except BaseException:
+            p.kill(); p.wait(); raise
+    if code: raise RuntimeError('Vorbereitung fehlgeschlagen: '+str(log)+'\n'+Path(log).read_text(encoding='utf-8',errors='replace')[-3000:])
 
 
 def prepare_dv(ffmpeg, ffprobe, path, stream, mode, dovi, root, output, name, fps, mkvmerge=None):
@@ -481,12 +534,17 @@ def normalization(kind):
         # zimg HLG display-referred conversion, fixed nominal peak 1000 cd/m2.
         return ('zscale=t=linear:npl=1000,format=gbrpf32le,'
                 'zscale=p=bt2020:t=smpte2084:m=bt2020nc:r=limited:npl=1000,'
-                'format=yuv420p10le,')
+                'format=yuv420p16le,')
     if kind == 'dv':
         return ('libplacebo=apply_dolbyvision=1:colorspace=bt2020nc:'
                 'color_primaries=bt2020:color_trc=smpte2084:range=tv:'
-                'format=yuv420p10le:peak_detect=0:tonemapping=clip,')
+                'format=yuv420p16le:peak_detect=0:tonemapping=clip:dithering=none,')
     return ''
+
+
+def dv_device_args(kind):
+    # Explicit software device: no fallback to an installed GPU.
+    return ['-init_hw_device','vulkan=vk:llvmpipe','-filter_hw_device','vk'] if kind=='dv' else []
 
 
 def automatic_frame_count(exe, path, stream):
@@ -546,7 +604,7 @@ def detect_crop(ffmpeg, ffprobe, ref, stream):
         if index >= 7 and len(samples) >= 3:
             break
         start = max(0, min(duration * part, duration - 1))
-        cmd = [ffmpeg, '-hide_banner', '-nostdin', '-v', 'info', '-ss', str(start), '-i', str(ref),
+        cmd = [ffmpeg, '-hide_banner', '-nostdin', '-v', 'info', *dv_device_args(classify(stream)), '-ss', str(start), '-i', str(ref),
                '-t', str(min(3, duration-start)), '-map', '0:V:0', '-an', '-sn',
                '-vf', color_filter(stream) + normalization(classify(stream)) + f'cropdetect=limit={black_limit:.9f}:round=2:reset=0', '-f', 'null', '-']
         p = subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8', errors='replace')
@@ -620,7 +678,34 @@ def graph(fps, step, threads, hdr, limit=None, crop=None, display='1080'):
             f'n_threads={threads}:n_subsample={step}:shortest=1:repeatlast=0[out]')
 
 
-def evaluate(ffmpeg, ref, enc, fps, step, threads, hdr, root, log, limit=None, crop=None, display='1080'):
+def evaluate(ffmpeg, ref, enc, fps, step, threads, hdr, root, log, limit=None, crop=None, display='1080', frame_count=None, optimize=True):
+    if hdr:
+        if not isinstance(crop,dict):raise RuntimeError('HDR-Messung erfordert die aufgeloeste Bildgeometrie.')
+        width,height=crop['target'];commands=[]
+        plan=vmaf_hdr.sparse_plan(root/'model.json',step,limit or frame_count) if optimize else None
+        if plan and not limit:
+            print('HDR-25%-Optimierung: Referenz mit direkten Nachbarbildern; Encode nur bewertete Bilder. Vollstaendige Decoder-Framezaehlung bleibt aktiv.',flush=True)
+        for index,(path,key) in enumerate(((ref,'ref'),(enc,'enc'))):
+            trim=f'trim=end_frame={limit},' if limit else ''
+            filters=crop.get(key+'_color_filter','')
+            filters+=normalization(crop[key+'_kind'])
+            filters+='crop='+':'.join(map(str,crop[key]))+','
+            filters+=f'scale={width}:{height}:flags=bicubic,setsar=1,'
+            filters+='zscale=p=bt2020:t=smpte2084:m=bt2020nc:r=limited,format=yuv420p16le'
+            command=[ffmpeg,'-hide_banner','-nostdin','-xerror','-v','warning',
+                *dv_device_args(crop[key+'_kind']),'-i',str(path)]
+            if plan:
+                select=plan['reference_select' if index==0 else 'encoded_select']
+                # The first (null) output counts EVERY decoded frame, including
+                # discarded tail frames. Metadata errors cannot hide in samples.
+                command+=['-progress',str(Path(str(log)+f'.decoder{index}.progress').resolve()),'-stats_period','5',
+                    '-filter_complex',f"[0:V:0]{trim}split[count][render];[render]select='{select}',{filters}[out]",
+                    '-map','[count]','-c:v','wrapped_avframe','-fps_mode','passthrough','-f','null',os.devnull,
+                    '-map','[out]']
+            else:command+=['-map','0:V:0','-vf',trim+filters]
+            command+=['-an','-sn','-dn','-fps_mode','passthrough','-pix_fmt','yuv420p16le','-f','rawvideo','pipe:1']
+            commands.append(command)
+        return vmaf_hdr.evaluate(commands,width,height,threads,step,root,log,not limit,plan)
     cmd = [ffmpeg, '-hide_banner', '-nostdin', '-xerror', '-v', 'warning', '-i', str(enc), '-i', str(ref),
            '-filter_complex', graph(fps, step, threads, hdr, limit, crop, display),
            '-map', '[out]', '-an', '-sn', '-dn', '-f', 'null', '-']
@@ -651,15 +736,21 @@ def evaluate(ffmpeg, ref, enc, fps, step, threads, hdr, root, log, limit=None, c
 
 
 def check_hdr_conversion(ffmpeg, root, threads):
-    # An old library must not silently interpret an HDR model as an SDR model.
-    cmd = [ffmpeg, '-hide_banner', '-nostdin', '-v', 'error', '-f', 'lavfi', '-i',
-           'color=size=1920x1080:rate=24,format=yuv420p10le', '-filter_complex',
-           f'[0:v]trim=end_frame=2,split[a][b];[a][b]libvmaf=model=path=model.json:n_threads={threads}[o]',
-           '-map', '[o]', '-f', 'null', '-']
-    p = subprocess.run(cmd, cwd=root, capture_output=True, text=True, encoding='utf-8', errors='replace')
-    msg = p.stderr.lower()
-    if p.returncode == 0 or not any(x in msg for x in ('color', 'conversion', 'zimg')):
-        raise RuntimeError('HDR-Konvertierung nicht nachgewiesen. Aktuelles FFmpeg/libvmaf mit zimg erforderlich.\n' + p.stderr[-2000:])
+    vmaf_hdr.check_conversion(root,threads)
+
+
+def prepared_frame_count(exe, original, working, count, original_stream):
+    original_count, original_audit=automatic_frame_count(exe,original,original_stream)
+    if original_count==count:return count,original_audit,None
+    # A cut inside an open GOP can contain coded leading pictures the decoder
+    # discards. Container packet/frame statistics alone do not prove frame loss.
+    print('P7/Arbeitskopie: Frame-Metadaten weichen ab; zaehle beide Dateien zur Kontrolle ...',flush=True)
+    decoded_original=count_frames(exe,original)
+    decoded_working=count_frames(exe,working)
+    if decoded_original!=decoded_working:
+        raise RuntimeError(f'DV-Vorbereitung hat die dekodierte Frameanzahl veraendert: {decoded_original} -> {decoded_working}: {original}')
+    return decoded_working,{'method':'decoded_after_metadata_mismatch','count':decoded_original,'previous':original_audit},\
+        {'method':'decoded_after_metadata_mismatch','count':decoded_working,'previous_count':count}
 
 
 def duration_text(seconds):
@@ -707,6 +798,7 @@ def main():
     ap.add_argument('--ffprobe', help='Pfad zu FFprobe')
     ap.add_argument('--dovi-tool', help='Optionaler lokaler Pfad; sonst automatischer Download bei P7-Konvertierung')
     ap.add_argument('--mkvmerge', help='Optionaler MKVToolNix-Pfad fuer P7; sonst automatischer Download')
+    ap.add_argument('--vulkan-icd', help='Optionaler Pfad zum Mesa-Lavapipe-ICD fuer CPU-Dolby-Vision')
     ap.add_argument('--dv-mode', choices=('auto','compatible','rendered','base-layer'), default='auto',
                     help='auto: P7 als Kompatibilitaetsvergleich, sonst rendered; base-layer: gemeinsame HDR10-Basis')
     ap.add_argument('--model', type=Path, help='Lokales JSON-Modell, passend zu SDR/HDR')
@@ -774,16 +866,26 @@ def main():
         kinds = ['hdr','hdr'] if dv_comparison['mode'] == 'base-layer' else [
             'dv' if classify(s) == 'dv7' else classify(s) for s in (info_ref,info_enc)]
         def check_tools():
-            required_filters(ffmpeg,kinds)
+            required_filters(ffmpeg,kinds,sampling=hdr and args.percent==25)
             required_bsfs(ffmpeg,[info_ref,info_enc],dv_comparison['mode'])
         try:
             check_tools()
         except RuntimeError:
-            if args.no_download or any('BtbN/' in item['url'] for item in manifest): raise
+            if args.no_download or any(item.get('component')=='ffmpeg' for item in manifest): raise
             ffmpeg,ffprobe = download_tools(root,manifest)
             check_tools()
+        renderer=None
+        if 'dv' in kinds:
+            try:
+                renderer=configure_cpu_vulkan(ffmpeg,root,manifest,args.no_download,args.vulkan_icd)
+            except DVBackendTooOld:
+                if args.no_download or any(item.get('component')=='ffmpeg' for item in manifest):raise
+                ffmpeg,ffprobe=download_tools(root,manifest)
+                check_tools()
+                renderer=configure_cpu_vulkan(ffmpeg,root,manifest,args.no_download,args.vulkan_icd)
+            (output/'vulkan.log').write_text(renderer.pop('probe'),encoding='utf-8')
         dovi = None
-        mkvmerge = None
+        mkvmerge=None
         if dv_comparison['profile7_conversion']:
             dovi = shutil.which(args.dovi_tool or 'dovi_tool')
             if not dovi:
@@ -857,12 +959,14 @@ def main():
         def preflight():
             if hdr:
                 check_hdr_conversion(ffmpeg, root, args.threads)
+                for name in ('pq','unknown'):
+                    shutil.copyfile(root/f'hdr-probe-{name}.log',output/f'hdr-probe-{name}.log')
             print('Teste Modell und Decoder mit den ersten 8 Frames ...', flush=True)
             evaluate(ffmpeg, ref, enc, fps, 1, args.threads, hdr, root, output / 'preflight.log', 8, crop, args.display)
         try:
             preflight()
         except RuntimeError:
-            if args.no_download or any('BtbN/' in item['url'] for item in manifest):
+            if hdr or args.no_download or any(item.get('component')=='ffmpeg' for item in manifest):
                 raise
             print('Lokaler Build besteht Vorabtest nicht. Lade aktuelles portables Paket ...',flush=True)
             ffmpeg,ffprobe = download_tools(root,manifest)
@@ -877,16 +981,18 @@ def main():
                 ('original_reference',original_ref,ref,nr,original_info_ref),
                 ('original_encoded',original_enc,enc,ne,original_info_enc)):
             if original != working:
-                original_count, frame_check[label] = automatic_frame_count(ffprobe,original,stream)
-                if original_count != count:
-                    raise RuntimeError('DV-Vorbereitung hat die Frameanzahl veraendert: '+str(original))
+                count,frame_check[label],corrected=prepared_frame_count(ffprobe,original,working,count,stream)
+                if corrected:
+                    frame_check['reference' if label=='original_reference' else 'encoded']=corrected
+                if label=='original_reference':nr=count
+                else:ne=count
         if nr != ne or nr <= 0:
             raise RuntimeError(f'Frameanzahl stimmt nicht ueberein: Original {nr}, Encode {ne}')
         step = 100 // args.percent
         print(f'{kind.upper()}: {nr} Frames, jedes {step}. Bild. Messung laeuft ...', flush=True)
         print('VMAF_PROGRESS ' + json.dumps({'total': nr, 'frame': 0}), flush=True)
         measurement_started = time.monotonic()
-        command = evaluate(ffmpeg, ref, enc, fps, step, args.threads, hdr, root, output / 'ffmpeg.log', crop=crop, display=args.display)
+        command = evaluate(ffmpeg, ref, enc, fps, step, args.threads, hdr, root, output / 'ffmpeg.log', crop=crop, display=args.display,frame_count=nr)
         measurement_finished = time.monotonic()
         scores = json.loads((root / 'scores.json').read_text())
         frames = scores['frames']
@@ -906,7 +1012,11 @@ def main():
         summary = {'script_version': __version__, 'reference': str(original_ref), 'encoded': str(original_enc), 'type': kind,
                    'frame_check': frame_check,
                    'color_metadata':colors_report,
-                   'dv_comparison':dv_comparison, 'preparation':preparation,
+                   'dv_comparison':dv_comparison, 'preparation':preparation,'dv_renderer':renderer,
+                   'hdr_worker_version':run([vmaf_hdr.worker_path(),'--version']).strip() if hdr else None,
+                   'hdr_worker_sha256':file_sha256(vmaf_hdr.worker_path()) if hdr else None,
+                   'hdr_transport':{'bits':16,'primaries':'bt2020','transfer':'smpte2084','matrix':'bt2020nc','range':'limited','dv_dithering':False} if hdr else None,
+                   'hdr_sampling':json.loads((output/'ffmpeg.log.sampling.json').read_text()) if (output/'ffmpeg.log.sampling.json').exists() else None,
                    'original_reference_stream':original_info_ref,'original_encoded_stream':original_info_enc,
                    'percent': args.percent, 'subsample': step, 'total_frames': nr,
                    'scored_frames': len(values), 'fps': str(fps), 'mean': sum(values)/len(values),

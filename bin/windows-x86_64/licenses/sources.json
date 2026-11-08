@@ -1,0 +1,22 @@
+{
+  "vmaf": {
+    "url": "https://codeload.github.com/Netflix/vmaf/tar.gz/a6ed0f18285cab504b779bbccb0bbaddc3bf44c2",
+    "commit": "a6ed0f18285cab504b779bbccb0bbaddc3bf44c2",
+    "sha256": "fdf254f9034a406745b5aa325d04675f8e7e64e482840a4fbd726f609544c82c"
+  },
+  "ffmpeg": {
+    "url": "https://codeload.github.com/FFmpeg/FFmpeg/tar.gz/a1a7737c4bcace8615f70b8f2cc7fc515ca26522",
+    "commit": "a1a7737c4bcace8615f70b8f2cc7fc515ca26522",
+    "sha256": "90e2e8c72ef9ad4aba563ffd3971e4d715bd2ec6b4d5b0b52acea72b5265cd3a"
+  },
+  "zimg": {
+    "url": "https://codeload.github.com/sekrit-twc/zimg/tar.gz/67e0603271c080e22c8429856dd4a8a56587e61e",
+    "commit": "67e0603271c080e22c8429856dd4a8a56587e61e",
+    "sha256": "539495d51fcd8c7ef9b89a611454e0c1173d18e8d4e743efdef67c4aa7e40d4f"
+  },
+  "graphengine": {
+    "url": "https://codeload.github.com/sekrit-twc/graphengine/tar.gz/cb5b2ce13384ec2491f0c37256ea210034799f69",
+    "commit": "cb5b2ce13384ec2491f0c37256ea210034799f69",
+    "sha256": "663bc958094280e3dabfa76a408296a51f5222f56115fd7782eae737edeaa179"
+  }
+}

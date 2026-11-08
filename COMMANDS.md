@@ -1,6 +1,6 @@
 # Commands
 
-Alle CLI-Argumente für **Xelavie VMAF Check 0.1.0-nightly.8**. Die CLI wird über Dateipfade und Flags bedient; ohne Argumente erscheint eine kurze Starthilfe, mit `--help` die vollständige Hilfe. Es gibt keine interaktiven Rückfragen.
+Alle CLI-Argumente für **Xelavie VMAF Check 0.1.0-nightly.9**. Die CLI wird über Dateipfade und Flags bedient; ohne Argumente erscheint eine kurze Starthilfe, mit `--help` die vollständige Hilfe. Es gibt keine interaktiven Rückfragen.
 
 [Start und Hilfe](#start-und-hilfe) · [Prüfung](#prüfung) · [Crop](#crop) · [Farbangaben](#farbangaben) · [Dolby Vision](#dolby-vision) · [Programme und Modelle](#programme-und-modelle) · [Ordner](#ordner) · [Beispiele](#beispiele)
 
@@ -67,6 +67,8 @@ Nach Anzeige der lokalen URL darf das Terminal geschlossen werden. Tab/Browser s
 
 Die aktive Encode-Auflösung wird aus der Datei ermittelt. Die Referenz wird auf das passende aktive Bildraster gebracht; `--display 2160` macht aus einem 1080p-Encode keinen vollständigen Qualitätsvergleich gegen die ursprüngliche 4K-Auflösung.
 
+Bei `--percent 25` optimiert der HDR/DV-Pfad mit unterstütztem Modell automatisch die Bildaufbereitung: Referenzbilder werden einschließlich ihrer direkten Nachbarn verarbeitet, beim Encode nur jedes vierte Bild. So bleiben die Bewegungsmerkmale und Framepositionen erhalten. Beide Dateien werden weiterhin vollständig decodiert und gezählt. Bei unbekannten Modellkonfigurationen bleibt der bisherige Ablauf aktiv; ein zusätzlicher Flag ist nicht nötig.
+
 ## Crop
 
 | Flag | Erlaubte Werte | Standard | Beschreibung |
@@ -113,7 +115,7 @@ Einzelwerte haben Vorrang vor dem Preset, unabhängig von der Reihenfolge der Fl
 | `rendered` | Vergleicht die über die jeweilige SDR-/HDR-/DV-Pipeline verarbeiteten Bilder. Bei DV werden dekodierte DV-Metadaten verwendet. Profil 7 wird in diesem Modus abgelehnt. |
 | `base-layer` | Vergleicht nur die HDR10-Basis ohne DV-RPU und Enhancement Layer. Erfordert passende PQ-/BT.2020-Angaben auf beiden Seiten und kompatible Quellen: P7, P8.1, P10.1 oder normales HDR10. |
 
-**Keine vollständige Profil-7-FEL-Rekonstruktion.** DV-Verarbeitung benötigt passende FFmpeg/libplacebo-Funktionen und ein funktionierendes Vulkan-Gerät. Echte HDR-/HLG-/DV-Videoläufe sind noch nicht vollständig validiert. SDR gegen HDR ist kein unterstütztes Vergleichspaar.
+**Keine vollständige Profil-7-FEL-Rekonstruktion.** Der CPU-Pfad benötigt FFmpeg/libplacebo ab 7.387.0, Vulkan-Loader und Mesa Lavapipe, keine GPU. Windows kann Lavapipe nachladen; unter Linux wird ein vorhandenes ICD verwendet. HDR-VMAF nutzt den gebündelten x64-Worker mit zimg. Kurztests ersetzen keine Vollfilm-Validierung oder Dolby-Zertifizierung. SDR gegen HDR ist kein unterstütztes Vergleichspaar.
 
 ## Programme und Modelle
 
@@ -122,9 +124,10 @@ Einzelwerte haben Vorrang vor dem Preset, unabhängig von der Reihenfolge der Fl
 | `--ffmpeg` | Programmpfad oder auflösbarer Programmname | Verwendet ohne Angabe `ffmpeg` aus dem PATH; bei fehlenden Programmen oder erforderlichen Funktionen kann ein geeignetes Paket nachgeladen werden. |
 | `--ffprobe` | Programmpfad oder auflösbarer Programmname | Verwendet ohne Angabe `ffprobe` aus dem PATH; ansonsten gegebenenfalls zusammen mit FFmpeg nachladen. |
 | `--dovi-tool` | Programmpfad | Optionales lokales dovi_tool für Profil-7-Vorbereitung; sonst vorhandenes Werkzeug verwenden oder bei Bedarf herunterladen. |
-| `--mkvmerge` | Programmpfad | MKVToolNix für Profil-7-Arbeitskopien. Vorhandenes Programm aus dem PATH verwenden oder bei Bedarf SHA256-geprüft herunterladen (Windows/Linux x64). Für andere Architekturen lokal bereitstellen. |
+| `--mkvmerge` | Programmpfad | Optionales MKVToolNix für Profil-7-Vorbereitung; sonst vorhandenes Werkzeug oder temporärer Download. |
+| `--vulkan-icd` | JSON-Datei | Optionaler Mesa-Lavapipe-Treiber für die DV-Verarbeitung auf der CPU. Kein GPU-Fallback. |
 | `--model` | Pfad zu einer JSON-Datei | Eigenes VMAF-Modell. Ohne Angabe wird das zur Pipeline und Modellvorgabe ausgewählte Modell geladen. Ein eigenes Modell muss zu SDR/HDR und dem beabsichtigten Vergleich passen. |
-| `--no-download` | Kein zusätzlicher Wert | Verhindert automatische Downloads. Benötigt lokale FFmpeg-/FFprobe-Programme, `--model` und bei Profil-7-Konvertierung dovi_tool sowie mkvmerge. Bei portablen Startern muss auch Python bereits vorhanden sein. |
+| `--no-download` | Kein zusätzlicher Wert | Verhindert automatische Downloads. Benötigt lokale FFmpeg-/FFprobe-Programme, `--model` und gegebenenfalls dovi_tool. Bei portablen Startern muss auch Python bereits vorhanden sein. |
 | `--download-tools` | Kein zusätzlicher Wert | Erzwingt ein frisch heruntergeladenes FFmpeg-/FFprobe-Paket statt des lokalen Builds. |
 
 `--no-download` und `--download-tools` dürfen nicht zusammen verwendet werden. Ein eigener FFmpeg-Pfad allein verbietet keinen automatischen Ersatzdownload; dafür zusätzlich `--no-download` nutzen. uv, Git und Systemtreiber werden durch VMAF Check nicht automatisch installiert.

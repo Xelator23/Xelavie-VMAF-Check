@@ -280,9 +280,13 @@ class Tests(unittest.TestCase):
         self.assertIn('cropdetect=limit=0.094117647',call.call_args.args[0][call.call_args.args[0].index('-vf')+1])
 
     def test_hdr_negative_probe_rejects_silent_success(self):
-        fake = type('Result',(),{'returncode':0,'stderr':''})()
-        with patch.object(v.subprocess,'run',return_value=fake):
-            with self.assertRaises(RuntimeError): v.check_hdr_conversion('ffmpeg','.',2)
+        fake = type('Result',(),{'returncode':0,'stderr':b''})()
+        with tempfile.TemporaryDirectory() as d:
+            def pretend_success(*args,**kwargs):
+                (Path(d)/'hdr-probe-pq.json').write_text(json.dumps({'frames':[{},{}]}))
+                return fake
+            with patch.object(v.vmaf_hdr,'worker_path',return_value='worker'),patch.object(v.subprocess,'run',side_effect=pretend_success):
+                with self.assertRaisesRegex(RuntimeError,'Negativtest'):v.check_hdr_conversion('ffmpeg',d,2)
 
     def test_simulated_full_pipeline_all_percentages(self):
         for percent, expected in ((100,9),(50,5),(25,3)):
@@ -290,7 +294,8 @@ class Tests(unittest.TestCase):
                 p = Path(d)
                 for name in ('original.mkv','encode.mkv'): (p/name).write_bytes(b'fixture')
                 (p/'model.json').write_text('{}')
-                def fake_evaluate(ffmpeg,ref,enc,fps,step,threads,hdr,root,log,limit=None,crop=None,display='1080'):
+                def fake_evaluate(ffmpeg,ref,enc,fps,step,threads,hdr,root,log,limit=None,crop=None,display='1080',frame_count=None,optimize=True):
+                    if limit is None:self.assertEqual(frame_count,9)
                     data = {'frames':[{'frameNum':i,'metrics':{'vmaf':90.0}} for i in range(0,limit or 9,step)]}
                     (root/'scores.json').write_text(json.dumps(data))
                     Path(log).write_text('simulated')

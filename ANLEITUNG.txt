@@ -1,4 +1,4 @@
-XELAVIE VMAF CHECK 0.1.0-nightly.8
+XELAVIE VMAF CHECK 0.1.0-nightly.9
 
 Start, GUI, CLI-Argumente und Beispielbilder: siehe README.md.
 Dies ist eine Vorabversion. Echte HDR-/HLG-/DV-Videolaeufe sind noch
@@ -195,7 +195,8 @@ Das Python-Script sucht FFmpeg/FFprobe. Fehlende Programme oder benoetigte
 Filter loesen automatisch den Download des aktuellen portablen statischen
 BtbN-Pakets aus. Ein fehlgeschlagener Modell-Vorabtest mit einem lokalen
 Build loest ebenfalls einen einmaligen Versuch mit dem Download aus.
-VMAF/zimg/libplacebo muessen in diesem FFmpeg-Paket einkompiliert sein;
+SDR nutzt FFmpeg/libvmaf. HDR nutzt den mitgelieferten x64-Worker mit zimg.
+Fuer DV muss FFmpeg libplacebo ab 7.387.0 enthalten;
 es gibt keine separate DLL-Installation. Modelle werden automatisch aus
 Netflix/vmaf geladen. Keine Video-Uploads.
 
@@ -218,8 +219,9 @@ Ein Download kann keine nicht vorhandene Build-Funktion ersetzen.
 Falls auch das aktuelle Paket HDR/libplacebo nicht unterstuetzt, wird
 mit Fehler abgebrochen; ein kompatibler eigener Build kann ueber
 --ffmpeg PFAD --ffprobe PFAD angegeben werden.
-Dolby Vision/libplacebo braucht einen funktionierenden Vulkan-Treiber
-und ein geeignetes Vulkan-Geraet (ggf. Software-Implementierung).
+Dolby Vision verwendet CPU-Vulkan mit Mesa Lavapipe, keine GPU.
+Windows kann Lavapipe laden. Linux: mesa-vulkan-drivers und libvulkan1
+installieren oder eine passende portable Laufzeit mit --vulkan-icd angeben.
 Systemtreiber/Kernel-Komponenten werden nicht automatisch installiert.
 SDR, HDR10 und HLG verwenden in dieser Pipeline CPU-Filter.
 

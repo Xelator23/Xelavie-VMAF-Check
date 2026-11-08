@@ -17,9 +17,9 @@
 
 Vergleiche einen Encode mit seiner Originaldatei über den gesamten Film. Xelavie VMAF Check organisiert FFmpeg, Modelle, Crop-Erkennung und Ergebnisberichte. Deine Videos bleiben auf deinem Rechner.
 
-**Aktueller Stand: `0.1.0-nightly.8` · Release-Kanal: `nightly` · MIT-Lizenz**
+**Aktueller Stand: `0.1.0-nightly.9` · Release-Kanal: `nightly` · MIT-Lizenz**
 
-Dies ist eine Vorabversion. Die erste stabile Veröffentlichung ist als `v0.1.0` vorgesehen. Echte SDR-Prüfungen unter Windows wurden durchgeführt; vollständige HDR-/HLG-/Dolby-Vision-Videoläufe sind noch nicht validiert.
+Dies ist eine Vorabversion. Die erste stabile Veröffentlichung ist als `v0.1.0` vorgesehen. Echte SDR-Prüfungen unter Windows wurden durchgeführt; HDR-/Dolby-Vision-Kurztests unter Windows und Linux sind durchgeführt; vollständige HDR-/HLG-/DV-Filmläufe sind noch nicht validiert.
 
 ## Filme prüfen – nach der Installation
 
@@ -99,7 +99,7 @@ uv tool install git+https://github.com/Xelator23/Xelavie-VMAF-Check.git
 Ohne Versionszusatz wird der aktuelle Entwicklungsstand installiert. Für die konkret veröffentlichte Nightly stattdessen:
 
 ```sh
-uv tool install "git+https://github.com/Xelator23/Xelavie-VMAF-Check.git@v0.1.0-nightly.8"
+uv tool install "git+https://github.com/Xelator23/Xelavie-VMAF-Check.git@v0.1.0-nightly.9"
 ```
 
 uv richtet eine eigene Python-Umgebung ein und kann bei Bedarf eine passende Python-Version beschaffen. Falls der Startbefehl nicht gefunden wird: `uv tool update-shell` ausführen und das Terminal neu öffnen. Anschließend mit den beiden Dateipfaden starten, wie unter [Filme prüfen](#filme-prüfen--nach-der-installation) gezeigt. Ohne Argumente erscheint nur die kurze Starthilfe.
@@ -118,23 +118,23 @@ Deinstallation: `uv tool uninstall xelavie-vmaf-check`. Einstellungen und Ergebn
 
 ## Portable und optionales Wheel
 
-Unter [Releases](https://github.com/Xelator23/Xelavie-VMAF-Check/releases/tag/v0.1.0-nightly.8) stehen weiterhin getrennte Pakete bereit:
+Unter [Releases](https://github.com/Xelator23/Xelavie-VMAF-Check/releases/tag/v0.1.0-nightly.9) stehen weiterhin getrennte Pakete bereit:
 
 | Variante | Download | Start |
 | --- | --- | --- |
-| Windows portable | `Xelavie-VMAF-Check-0.1.0-nightly.8-Windows.zip` | `vmaf-check.cmd` |
-| Linux portable | `Xelavie-VMAF-Check-0.1.0-nightly.8-Linux.tar.gz` | `sh ./vmaf-check.sh` |
-| Optional: uv ohne Git | `xelavie_vmaf_check-0.1.0.dev8-py3-none-any.whl` | `xelavie-vmaf-check` |
+| Windows portable | `Xelavie-VMAF-Check-0.1.0-nightly.9-Windows.zip` | `vmaf-check.cmd` |
+| Linux portable | `Xelavie-VMAF-Check-0.1.0-nightly.9-Linux.tar.gz` | `sh ./vmaf-check.sh` |
+| Optional: uv ohne Git | `xelavie_vmaf_check-0.1.0.dev9-py3-none-any.whl` | `xelavie-vmaf-check` |
 
 Portable benötigt Python 3.10+ oder bereits installiertes uv. Vor dem Entpacken beziehungsweise Installieren eines Release-Pakets dessen SHA256 gemäß [Installationsanleitung](INSTALLATION.md) prüfen. Kein `curl | bash`, kein `irm | iex` und keine Administratorrechte für das portable Paket.
 
 Das Wheel ist eine zusätzliche Möglichkeit für Nutzer mit uv, aber ohne Git:
 
 ```sh
-uv tool install --python 3.12 ./xelavie_vmaf_check-0.1.0.dev8-py3-none-any.whl
+uv tool install --python 3.12 ./xelavie_vmaf_check-0.1.0.dev9-py3-none-any.whl
 ```
 
-Wheel-Updates: neues Wheel herunterladen, prüfen und mit `uv tool install --reinstall --python 3.12 ./DATEINAME.whl` installieren. `0.1.0.dev8` ist die Python-Paketbezeichnung für `0.1.0-nightly.8`.
+Wheel-Updates: neues Wheel herunterladen, prüfen und mit `uv tool install --reinstall --python 3.12 ./DATEINAME.whl` installieren. `0.1.0.dev9` ist die Python-Paketbezeichnung für `0.1.0-nightly.9`.
 
 Alle Wege verwenden denselben Prüfcode und dieselbe UI. FFmpeg und Modelle werden bei Bedarf separat heruntergeladen; Treiber werden nicht installiert. Das Projekt ist noch nicht auf PyPI veröffentlicht: Der Installationsbefehl benötigt deshalb die GitHub-URL oder eine Wheel-Datei.
 
@@ -194,7 +194,7 @@ Direkter Start mit bekannten BT.709-Limited-Quellen:
 ### Linux
 
 ```sh
-tar -xzf Xelavie-VMAF-Check-0.1.0-nightly.8-Linux.tar.gz
+tar -xzf Xelavie-VMAF-Check-0.1.0-nightly.9-Linux.tar.gz
 cd Xelavie-VMAF-Check
 sh ./vmaf-check.sh
 ```
@@ -260,16 +260,31 @@ Startdiagnosen stehen in `gui.log` neben der Benutzerkonfiguration: unter Window
 
 - Original und Encode brauchen dieselbe Schnittfassung, denselben Startframe und dieselbe konstante Bildrate. Es gibt keine automatische Synchronisierung oder Schnittkorrektur.
 - 25 % bedeutet jedes vierte Bild über den **ganzen Film**; die Decoder lesen weiterhin alle Frames. Die Laufzeit sinkt daher nicht zwingend auf ein Viertel.
+- Bei 25-%-HDR/DV-Prüfungen mit dem unterstützten HDR-Modell erfolgt die teure Aufbereitung frühzeitig nur für benötigte Bilder: ungefähr 75 % der Referenzbilder (einschließlich der direkten Nachbarn für Bewegung) und 25 % der Encode-Bilder. Bewertung und ursprüngliche Framepositionen bleiben gleich. Andere Modellkonfigurationen nutzen den vollständigen Ablauf. Die Optimierung wird im Protokoll und unter `hdr_sampling` im Ergebnis dokumentiert.
 - Der Vergleich erfolgt auf der Zielauflösung des Encodes. Ein 1080p-Encode wird damit nicht als Wiedergabe auf einem gemeinsamen 4K-Raster bewertet.
 - Crop ist eine Heuristik. Dunkle Szenen, Untertitel oder wechselnde Seitenverhältnisse können manuelle Einstellungen erfordern. Abweichende aktive Seitenverhältnisse werden nicht automatisch gestreckt.
 - Fehlende Farbmetadaten werden nicht aus der Auflösung geraten. FFprobe liest Container/Bitstream; bleiben notwendige Angaben unbekannt, müssen bekannte Quellwerte angegeben werden. Ein Farb-Preset wandelt SDR nicht in HDR um. SDR gegen HDR ist ausgeschlossen.
 - HLG wird unter einer festgelegten 1000-cd/m²-Normalisierung nach PQ umgerechnet. HDR10+ wird anhand seiner PQ-Bilder bewertet, nicht als dynamische HDR10+-Wiedergabe.
-- Dolby Vision benötigt passende FFmpeg/libplacebo-Funktionen und ein funktionierendes Vulkan-Gerät samt Treiber. Profile 5/8/10 verwenden dekodierte DV-Metadaten; Profil 10 erfordert AV1.
+- Seit nightly.9 verwendet Dolby Vision Mesa Lavapipe statt einer GPU. Benötigt werden Vulkan-Loader, Lavapipe und FFmpeg mit libplacebo ab 7.387.0. Windows kann Lavapipe temporär nachladen; unter Linux wird ein vorhandenes Mesa-ICD verwendet (`--vulkan-icd` für eine portable Laufzeit). Profile 5/8/10 verwenden dekodierte DV-Metadaten; Profil 10 erfordert AV1.
+- HDR-VMAF läuft in einer gebündelten nativen x64-Messkomponente mit libvmaf/zimg. Die Bildübertragung erfolgt mit 16 Bit durch begrenzte Speicherpuffer. Positiv- und Negativtest müssen bestehen; es gibt keinen Ersatz durch ein SDR-Modell. Der Quell-Build steht unter `native/`.
+- Profil 7 benötigt zusätzlich MKVToolNix/mkvmerge. Ohne vorhandenes Werkzeug wird ein festes, SHA256-geprüftes Paket temporär geladen. Unter Linux wird die AppImage ohne FUSE und ohne GUI entpackt. Die Einschränkung bezüglich vollständiger FEL-Rekonstruktion bleibt bestehen.
 - **Profil 7:** Im Automatikmodus erfolgt ein Kompatibilitätsvergleich nach P8.1-Konvertierung mit verworfenem Enhancement Layer. **Keine vollständige FEL-Rekonstruktion.** Ein hoher Score beweist keine gleichwertige vollständige P7-Wiedergabe. Die berücksichtigten Profilpaarungen 5/7/8/10 sind kein Nachweis erfolgreicher realer Videoläufe für jede Paarung.
 
 Details zu Crop, Modellen, Farb-Overrides, Dolby-Vision-Modi und Offline-Betrieb stehen in [ANLEITUNG.txt](ANLEITUNG.txt).
 
 ## Voraussetzungen und Downloads
+
+**HDR/DV-Pakete: Windows x64 und Linux x86_64.** Der native Worker wird mitgeliefert. Für ARM64 ist ein eigener passender Worker über `VMAF_HDR_WORKER` erforderlich; ARM64-HDR/DV ist nicht getestet.
+
+Für DV auf Ubuntu/Debian Mesa und Vulkan bereitstellen (keine GPU nötig):
+
+```sh
+sudo apt update
+sudo apt install mesa-vulkan-drivers libvulkan1
+```
+
+Bei einer portablen Mesa-Laufzeit deren ICD-Datei mit `--vulkan-icd /pfad/lvp_icd.json` angeben. Benötigte Mesa-Bibliotheken müssen ebenfalls erreichbar sein. Ein älteres FFmpeg/libplacebo wird abgelehnt; bei Bedarf `--ffmpeg` und `--ffprobe` auf einen aktuellen Build setzen. Systempakete installiert VMAF Check nicht automatisch.
+
 
 Windows benötigt PowerShell 5.1+. Linux benötigt eine passende glibc; Alpine/musl ist kein zugesichertes Ziel. Die automatischen Werkzeugdownloads berücksichtigen x64/ARM64, wobei die Verfügbarkeit passender Upstream-Builds entscheidend bleibt.
 
@@ -280,6 +295,9 @@ FFmpeg/FFprobe, VMAF-Modelle und bei Bedarf `dovi_tool` werden automatisch gelad
 Die UI ist ausschließlich an `127.0.0.1` gebunden. Videos werden nicht hochgeladen. Berichte enthalten lokale Dateipfade – vor dem Teilen von Fehlerberichten persönliche Angaben entfernen.
 
 ## Entwicklung und Tests
+
+[HDR-/DV-Prüfstand für nightly.9](HDR_TESTS.md) – getestete Fälle, Plattformen und Grenzen.
+
 
 Nur Python-Standardbibliothek, keine `pip`-Pakete erforderlich:
 

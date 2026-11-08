@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-nightly.9
+
+- HDR-Messung über gebündelten nativen x64-Worker mit libvmaf/zimg; behebt `libvmaf was built without zimg support`. HDR-Vorabtest verlangt nun eine erfolgreiche Messung und die Ablehnung unbekannter Farbangaben.
+- Getesteter CPU-DV-Ablauf mit Mesa Lavapipe und libplacebo ab 7.387.0 für Windows und Linux. Windows lädt Lavapipe bei Bedarf SHA256-geprüft; Linux verwendet ein vorhandenes Mesa-ICD.
+- 25-%-HDR/DV-Prüfungen bereiten nur benötigte Bilder einschließlich Referenznachbarn auf. Geprüfte Bilddaten, Merkmale und Scores bleiben innerhalb derselben Plattform gleich; keine pauschale 75-%-Zeitersparnis.
+- Profil-7-Remux- und Download-Hotfixes bleiben enthalten. Keine vollständige P7-FEL-Rekonstruktion.
+- Windows-/Linux-Pakete und uv-Wheel enthalten Worker, Quell-Build und Lizenzhinweise. Kurztests mit echtem Filmmaterial und synthetischen Profilen; keine abgeschlossene Vollfilm-HDR/DV-Validierung.
+
 ## 0.1.0-nightly.8
 
 - Profil-7-Arbeitskopien werden mit MKVToolNix und der ursprünglichen rationalen Bildrate gemuxt. Behebt den FFmpeg-Abbruch „unknown timestamp“.

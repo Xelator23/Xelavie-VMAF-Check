@@ -31,7 +31,7 @@ class DownloadTests(unittest.TestCase):
                         manifest=[]
                         self.assertEqual(len(v.download_tools(Path(d),manifest)),2)
                         self.assertEqual(fetch.call_args.args,(url,Path(d)/name))
-                        self.assertEqual(manifest,[{'url':url,'sha256':digest,'verified_release_digest':True}])
+                        self.assertEqual(manifest,[{'url':url,'sha256':digest,'verified_release_digest':True,'component':'ffmpeg'}])
 
     def test_ffmpeg_relocation_rejects_other_sources(self):
         name='ffmpeg-master-latest-win64-gpl.zip'
