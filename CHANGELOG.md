@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0-nightly.8
+
+- Profil-7-Arbeitskopien werden mit MKVToolNix und der ursprünglichen rationalen Bildrate gemuxt. Behebt den FFmpeg-Abbruch „unknown timestamp“.
+- MKVToolNix bei Bedarf separat und SHA256-geprüft nachladen; optional `--mkvmerge` für lokale Installationen.
+- Keine Änderungen an Mesa, HDR-Messung oder der VMAF-Bewertung.
+
 ## 0.1.0-nightly.7
 
 - FFmpeg-Download nach dem Umzug zu `FFmpeg-Builds/FFmpeg-Builds` repariert; die bisherige Adresse bleibt kompatibel.

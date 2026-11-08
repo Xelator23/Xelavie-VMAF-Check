@@ -17,7 +17,7 @@
 
 Vergleiche einen Encode mit seiner Originaldatei über den gesamten Film. Xelavie VMAF Check organisiert FFmpeg, Modelle, Crop-Erkennung und Ergebnisberichte. Deine Videos bleiben auf deinem Rechner.
 
-**Aktueller Stand: `0.1.0-nightly.7` · Release-Kanal: `nightly` · MIT-Lizenz**
+**Aktueller Stand: `0.1.0-nightly.8` · Release-Kanal: `nightly` · MIT-Lizenz**
 
 Dies ist eine Vorabversion. Die erste stabile Veröffentlichung ist als `v0.1.0` vorgesehen. Echte SDR-Prüfungen unter Windows wurden durchgeführt; vollständige HDR-/HLG-/Dolby-Vision-Videoläufe sind noch nicht validiert.
 
@@ -99,7 +99,7 @@ uv tool install git+https://github.com/Xelator23/Xelavie-VMAF-Check.git
 Ohne Versionszusatz wird der aktuelle Entwicklungsstand installiert. Für die konkret veröffentlichte Nightly stattdessen:
 
 ```sh
-uv tool install "git+https://github.com/Xelator23/Xelavie-VMAF-Check.git@v0.1.0-nightly.7"
+uv tool install "git+https://github.com/Xelator23/Xelavie-VMAF-Check.git@v0.1.0-nightly.8"
 ```
 
 uv richtet eine eigene Python-Umgebung ein und kann bei Bedarf eine passende Python-Version beschaffen. Falls der Startbefehl nicht gefunden wird: `uv tool update-shell` ausführen und das Terminal neu öffnen. Anschließend mit den beiden Dateipfaden starten, wie unter [Filme prüfen](#filme-prüfen--nach-der-installation) gezeigt. Ohne Argumente erscheint nur die kurze Starthilfe.
@@ -118,23 +118,23 @@ Deinstallation: `uv tool uninstall xelavie-vmaf-check`. Einstellungen und Ergebn
 
 ## Portable und optionales Wheel
 
-Unter [Releases](https://github.com/Xelator23/Xelavie-VMAF-Check/releases/tag/v0.1.0-nightly.7) stehen weiterhin getrennte Pakete bereit:
+Unter [Releases](https://github.com/Xelator23/Xelavie-VMAF-Check/releases/tag/v0.1.0-nightly.8) stehen weiterhin getrennte Pakete bereit:
 
 | Variante | Download | Start |
 | --- | --- | --- |
-| Windows portable | `Xelavie-VMAF-Check-0.1.0-nightly.7-Windows.zip` | `vmaf-check.cmd` |
-| Linux portable | `Xelavie-VMAF-Check-0.1.0-nightly.7-Linux.tar.gz` | `sh ./vmaf-check.sh` |
-| Optional: uv ohne Git | `xelavie_vmaf_check-0.1.0.dev7-py3-none-any.whl` | `xelavie-vmaf-check` |
+| Windows portable | `Xelavie-VMAF-Check-0.1.0-nightly.8-Windows.zip` | `vmaf-check.cmd` |
+| Linux portable | `Xelavie-VMAF-Check-0.1.0-nightly.8-Linux.tar.gz` | `sh ./vmaf-check.sh` |
+| Optional: uv ohne Git | `xelavie_vmaf_check-0.1.0.dev8-py3-none-any.whl` | `xelavie-vmaf-check` |
 
 Portable benötigt Python 3.10+ oder bereits installiertes uv. Vor dem Entpacken beziehungsweise Installieren eines Release-Pakets dessen SHA256 gemäß [Installationsanleitung](INSTALLATION.md) prüfen. Kein `curl | bash`, kein `irm | iex` und keine Administratorrechte für das portable Paket.
 
 Das Wheel ist eine zusätzliche Möglichkeit für Nutzer mit uv, aber ohne Git:
 
 ```sh
-uv tool install --python 3.12 ./xelavie_vmaf_check-0.1.0.dev7-py3-none-any.whl
+uv tool install --python 3.12 ./xelavie_vmaf_check-0.1.0.dev8-py3-none-any.whl
 ```
 
-Wheel-Updates: neues Wheel herunterladen, prüfen und mit `uv tool install --reinstall --python 3.12 ./DATEINAME.whl` installieren. `0.1.0.dev7` ist die Python-Paketbezeichnung für `0.1.0-nightly.7`.
+Wheel-Updates: neues Wheel herunterladen, prüfen und mit `uv tool install --reinstall --python 3.12 ./DATEINAME.whl` installieren. `0.1.0.dev8` ist die Python-Paketbezeichnung für `0.1.0-nightly.8`.
 
 Alle Wege verwenden denselben Prüfcode und dieselbe UI. FFmpeg und Modelle werden bei Bedarf separat heruntergeladen; Treiber werden nicht installiert. Das Projekt ist noch nicht auf PyPI veröffentlicht: Der Installationsbefehl benötigt deshalb die GitHub-URL oder eine Wheel-Datei.
 
@@ -194,7 +194,7 @@ Direkter Start mit bekannten BT.709-Limited-Quellen:
 ### Linux
 
 ```sh
-tar -xzf Xelavie-VMAF-Check-0.1.0-nightly.7-Linux.tar.gz
+tar -xzf Xelavie-VMAF-Check-0.1.0-nightly.8-Linux.tar.gz
 cd Xelavie-VMAF-Check
 sh ./vmaf-check.sh
 ```

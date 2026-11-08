@@ -27,7 +27,7 @@ import urllib.error
 import zipfile
 from fractions import Fraction
 
-__version__ = '0.1.0-nightly.7'
+__version__ = '0.1.0-nightly.8'
 
 COLOR_FIELDS = {'primaries':'color_primaries', 'transfer':'color_transfer',
                 'matrix':'color_space', 'range':'color_range'}
@@ -323,13 +323,43 @@ def logged(cmd, log):
     if code: raise RuntimeError('Vorbereitung fehlgeschlagen: '+str(log)+'\n'+Path(log).read_text(encoding='utf-8',errors='replace')[-3000:])
 
 
-def prepare_dv(ffmpeg, ffprobe, path, stream, mode, dovi, root, output, name, fps):
+def download_mkvmerge(root, manifest):
+    if platform.machine().lower() not in ('amd64','x86_64'):
+        raise RuntimeError('MKVToolNix fuer diese Architektur bitte mit --mkvmerge angeben.')
+    windows=os.name=='nt'
+    url=('https://mkvtoolnix.download/windows/releases/102.0/mkvtoolnix-64-bit-102.0.zip' if windows else
+         'https://mkvtoolnix.download/appimage/MKVToolNix_GUI-102.0-x86_64.AppImage')
+    expected=('c02e918900f6d945d9307b426237e456378b79a200589ac6928de39064409a44' if windows else
+              'c66345b30d6d5fd640ea982ab5e202a99b9f541a20e42aa19edd90f3ddd5dc9b')
+    archive=root/('mkvtoolnix.zip' if windows else 'mkvmerge.AppImage')
+    print('Lade temporaeres MKVToolNix-Paket fuer P7 ...',flush=True)
+    if fetch(url,archive)!=expected:raise RuntimeError('MKVToolNix SHA256 stimmt nicht.')
+    manifest.append({'url':url,'sha256':expected,'verified_pinned_digest':True})
+    dest=root/'mkvtoolnix';dest.mkdir(exist_ok=True)
+    if windows:
+        unpack(archive,dest)
+        matches=list(dest.rglob('mkvmerge.exe'))
+        if len(matches)!=1:raise RuntimeError('mkvmerge.exe im Paket nicht eindeutig.')
+        return str(matches[0])
+    archive.chmod(0o755)
+    run([archive,'--appimage-extract'],cwd=dest)
+    # The AppImage runtime normally sets APPDIR/ARGV0. Supply them in a local
+    # wrapper so extraction also works without FUSE or a GUI session.
+    launcher=dest/'mkvmerge'
+    launcher.write_text('#!/bin/sh\nAPPDIR="$(CDPATH= cd -- "$(dirname -- "$0")/squashfs-root" && pwd)"\n'
+                        'export APPDIR\nexport ARGV0=mkvmerge\nexec "$APPDIR/AppRun" "$@"\n',encoding='utf-8')
+    launcher.chmod(0o755)
+    return str(launcher)
+
+
+def prepare_dv(ffmpeg, ffprobe, path, stream, mode, dovi, root, output, name, fps, mkvmerge=None):
     c = dv_config(stream)
     if not c or (c['dv_profile'] != 7 and mode != 'base-layer'):
         return path, stream, None
     result = root / (name+'-prepared.mkv')
     # No shell pipelines: separate argument lists and binary stdout handles.
     if mode == 'compatible':
+        if not mkvmerge: raise RuntimeError('P7-Vorbereitung benoetigt MKVToolNix/mkvmerge.')
         raw = root / (name+'-p81.hevc')
         decode = [ffmpeg,'-hide_banner','-nostdin','-v','error','-i',str(path),'-map','0:V:0',
                   '-c:v','copy','-bsf:v','hevc_mp4toannexb','-f','hevc','-']
@@ -347,8 +377,13 @@ def prepare_dv(ffmpeg, ffprobe, path, stream, mode, dovi, root, output, name, fp
             finally:
                 for p in (consumer,producer):
                     if p and p.poll() is None: p.kill(); p.wait()
-        logged([ffmpeg,'-hide_banner','-nostdin','-v','error','-r',str(fps),'-i',raw,
-                '-map','0:v:0','-c:v','copy',result],output/(name+'-remux.log'))
+        # Raw HEVC has no container timestamps. mkvmerge generates CFR timestamps
+        # from the original rational rate and preserves the DOVI configuration.
+        with open(output/(name+'-remux.log'),'w',encoding='utf-8') as logfile:
+            proc=subprocess.run([str(mkvmerge),'-o',str(result),'--default-duration',
+                f'0:{fps.numerator}/{fps.denominator}fps',str(raw)],stdout=logfile,stderr=subprocess.STDOUT)
+        if proc.returncode not in (0,1):
+            raise RuntimeError('MKVToolNix P7-Remux fehlgeschlagen: '+str(output/(name+'-remux.log')))
         raw.unlink()
     else:
         filters = 'dovi_rpu=strip=1'
@@ -671,6 +706,7 @@ def main():
     ap.add_argument('--ffmpeg', help='Pfad zu FFmpeg')
     ap.add_argument('--ffprobe', help='Pfad zu FFprobe')
     ap.add_argument('--dovi-tool', help='Optionaler lokaler Pfad; sonst automatischer Download bei P7-Konvertierung')
+    ap.add_argument('--mkvmerge', help='Optionaler MKVToolNix-Pfad fuer P7; sonst automatischer Download')
     ap.add_argument('--dv-mode', choices=('auto','compatible','rendered','base-layer'), default='auto',
                     help='auto: P7 als Kompatibilitaetsvergleich, sonst rendered; base-layer: gemeinsame HDR10-Basis')
     ap.add_argument('--model', type=Path, help='Lokales JSON-Modell, passend zu SDR/HDR')
@@ -747,12 +783,17 @@ def main():
             ffmpeg,ffprobe = download_tools(root,manifest)
             check_tools()
         dovi = None
+        mkvmerge = None
         if dv_comparison['profile7_conversion']:
             dovi = shutil.which(args.dovi_tool or 'dovi_tool')
             if not dovi:
                 if args.no_download: raise RuntimeError('Profil-7-Konvertierung benoetigt dovi_tool; Download deaktiviert.')
                 dovi = download_dovi(root,manifest)
             dv_comparison['dovi_tool_version'] = run([dovi,'--version']).strip()
+            mkvmerge=shutil.which(args.mkvmerge or 'mkvmerge')
+            if not mkvmerge:
+                if args.no_download:raise RuntimeError('P7 benoetigt mkvmerge; --mkvmerge angeben oder Download erlauben.')
+                mkvmerge=download_mkvmerge(root,manifest)
         preparation = []
         to_prepare = [(p,s) for p,s in ((ref,info_ref),(enc,info_enc)) if dv_config(s) and
                       (dv_comparison['mode']=='base-layer' or (dv_config(s) or {}).get('dv_profile')==7)]
@@ -764,8 +805,8 @@ def main():
         for label,path,s in (('reference',ref,info_ref),('encoded',enc,info_enc)):
             if (dv_config(s) or {}).get('dv_profile') == 7:
                 dv_comparison[label+'_p7_sample'] = profile7_sample(ffprobe,path)
-        ref,info_ref,ref_preparation = prepare_dv(ffmpeg,ffprobe,ref,info_ref,dv_comparison['mode'],dovi,root,output,'reference',fps)
-        enc,info_enc,enc_preparation = prepare_dv(ffmpeg,ffprobe,enc,info_enc,dv_comparison['mode'],dovi,root,output,'encoded',fps)
+        ref,info_ref,ref_preparation = prepare_dv(ffmpeg,ffprobe,ref,info_ref,dv_comparison['mode'],dovi,root,output,'reference',fps,mkvmerge)
+        enc,info_enc,enc_preparation = prepare_dv(ffmpeg,ffprobe,enc,info_enc,dv_comparison['mode'],dovi,root,output,'encoded',fps,mkvmerge)
         info_ref, info_enc = apply_colors(info_ref,ref_colors), apply_colors(info_enc,enc_colors)
         preparation = [p for p in (ref_preparation,enc_preparation) if p]
         kind, prepared_fps = validate_pair(info_ref,info_enc)
