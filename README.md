@@ -8,7 +8,7 @@
 
 Vergleiche einen Encode mit seiner Originaldatei über den gesamten Film. Xelavie VMAF Check organisiert FFmpeg, Modelle, Crop-Erkennung und Ergebnisberichte. Deine Videos bleiben auf deinem Rechner.
 
-**Aktueller Stand: `0.1.0-nightly.5` · Release-Kanal: `nightly` · MIT-Lizenz**
+**Aktueller Stand: `0.1.0-nightly.6` · Release-Kanal: `nightly` · MIT-Lizenz**
 
 Dies ist eine Vorabversion. Die erste stabile Veröffentlichung ist als `v0.1.0` vorgesehen. Echte SDR-Prüfungen unter Windows wurden durchgeführt; vollständige HDR-/HLG-/Dolby-Vision-Videoläufe sind noch nicht validiert.
 
@@ -53,7 +53,7 @@ uv tool install git+https://github.com/Xelator23/Xelavie-VMAF-Check.git
 Ohne Versionszusatz wird der aktuelle Entwicklungsstand installiert. Für die konkret veröffentlichte Nightly stattdessen:
 
 ```sh
-uv tool install "git+https://github.com/Xelator23/Xelavie-VMAF-Check.git@v0.1.0-nightly.5"
+uv tool install "git+https://github.com/Xelator23/Xelavie-VMAF-Check.git@v0.1.0-nightly.6"
 ```
 
 uv richtet eine eigene Python-Umgebung ein und kann bei Bedarf eine passende Python-Version beschaffen. Falls der Startbefehl nicht gefunden wird: `uv tool update-shell` ausführen und das Terminal neu öffnen. Anschließend mit den beiden Dateipfaden starten, wie unter [Filme prüfen](#filme-prüfen--nach-der-installation) gezeigt. Ohne Argumente erscheint nur die kurze Starthilfe.
@@ -72,23 +72,23 @@ Deinstallation: `uv tool uninstall xelavie-vmaf-check`. Einstellungen und Ergebn
 
 ## Portable und optionales Wheel
 
-Unter [Releases](https://github.com/Xelator23/Xelavie-VMAF-Check/releases/tag/v0.1.0-nightly.5) stehen weiterhin getrennte Pakete bereit:
+Unter [Releases](https://github.com/Xelator23/Xelavie-VMAF-Check/releases/tag/v0.1.0-nightly.6) stehen weiterhin getrennte Pakete bereit:
 
 | Variante | Download | Start |
 | --- | --- | --- |
-| Windows portable | `Xelavie-VMAF-Check-0.1.0-nightly.5-Windows.zip` | `vmaf-check.cmd` |
-| Linux portable | `Xelavie-VMAF-Check-0.1.0-nightly.5-Linux.tar.gz` | `sh ./vmaf-check.sh` |
-| Optional: uv ohne Git | `xelavie_vmaf_check-0.1.0.dev5-py3-none-any.whl` | `xelavie-vmaf-check` |
+| Windows portable | `Xelavie-VMAF-Check-0.1.0-nightly.6-Windows.zip` | `vmaf-check.cmd` |
+| Linux portable | `Xelavie-VMAF-Check-0.1.0-nightly.6-Linux.tar.gz` | `sh ./vmaf-check.sh` |
+| Optional: uv ohne Git | `xelavie_vmaf_check-0.1.0.dev6-py3-none-any.whl` | `xelavie-vmaf-check` |
 
 Portable benötigt Python 3.10+ oder bereits installiertes uv. Vor dem Entpacken beziehungsweise Installieren eines Release-Pakets dessen SHA256 gemäß [Installationsanleitung](INSTALLATION.md) prüfen. Kein `curl | bash`, kein `irm | iex` und keine Administratorrechte für das portable Paket.
 
 Das Wheel ist eine zusätzliche Möglichkeit für Nutzer mit uv, aber ohne Git:
 
 ```sh
-uv tool install --python 3.12 ./xelavie_vmaf_check-0.1.0.dev5-py3-none-any.whl
+uv tool install --python 3.12 ./xelavie_vmaf_check-0.1.0.dev6-py3-none-any.whl
 ```
 
-Wheel-Updates: neues Wheel herunterladen, prüfen und mit `uv tool install --reinstall --python 3.12 ./DATEINAME.whl` installieren. `0.1.0.dev5` ist die Python-Paketbezeichnung für `0.1.0-nightly.5`.
+Wheel-Updates: neues Wheel herunterladen, prüfen und mit `uv tool install --reinstall --python 3.12 ./DATEINAME.whl` installieren. `0.1.0.dev6` ist die Python-Paketbezeichnung für `0.1.0-nightly.6`.
 
 Alle Wege verwenden denselben Prüfcode und dieselbe UI. FFmpeg und Modelle werden bei Bedarf separat heruntergeladen; Treiber werden nicht installiert. Das Projekt ist noch nicht auf PyPI veröffentlicht: Der Installationsbefehl benötigt deshalb die GitHub-URL oder eine Wheel-Datei.
 
@@ -148,7 +148,7 @@ Direkter Start mit bekannten BT.709-Limited-Quellen:
 ### Linux
 
 ```sh
-tar -xzf Xelavie-VMAF-Check-0.1.0-nightly.5-Linux.tar.gz
+tar -xzf Xelavie-VMAF-Check-0.1.0-nightly.6-Linux.tar.gz
 cd Xelavie-VMAF-Check
 sh ./vmaf-check.sh
 ```
@@ -197,6 +197,18 @@ xelavie-vmaf-check --gui
 ```
 
 Portable unter Windows: `.\vmaf-check.cmd --gui`; unter Linux: `sh ./vmaf-check.sh --gui`.
+
+### GUI im Hintergrund
+
+`--gui` startet den lokalen Dienst im Hintergrund und öffnet den Browser. Sobald die lokale URL angezeigt wird, kannst du PowerShell beziehungsweise das Terminal schließen. Auch beim Schließen des Tabs oder Browsers laufen Prüfungen und Warteschlange weiter.
+
+- Erneut `xelavie-vmaf-check --gui` aufrufen, um dieselbe Sitzung zu öffnen. Es wird kein zweiter Dienst für dieselbe Benutzerkonfiguration gestartet.
+- **GUI beenden** beendet den Hintergrunddienst. Bei einer laufenden Prüfung wird vorher nachgefragt; bestätigtes Beenden bricht diese Prüfung ab. Wartende Aufträge bleiben gespeichert.
+- Der Tab wird nach der Beenden-Anfrage automatisch geschlossen, soweit der Browser das zulässt. Andernfalls erscheint ein Hinweis zum manuellen Schließen.
+- Der Dienst startet nicht automatisch beim Anmelden. Nach Neustart oder Abmeldung erneut `--gui` aufrufen; die Warteschlange ist zunächst pausiert. Eine unterbrochene Prüfung beginnt bei erneutem Einreihen von vorn.
+- Unter Linux trennt sich der Dienst vom Terminal. Das Weiterlaufen nach vollständiger Abmeldung hängt von den Sitzungseinstellungen ab und wird nicht garantiert; es wird kein systemd-Dienst installiert.
+
+Startdiagnosen stehen in `gui.log` neben der Benutzerkonfiguration: unter Windows normalerweise `%APPDATA%\VMAF-Check`, unter Linux `${XDG_CONFIG_HOME:-~/.config}/VMAF-Check`. Dort werden auch Sitzung und Prozesssperre verwaltet. Vor einem Programmupdate den Dienst über **GUI beenden** schließen.
 
 ## Vergleichsbedingungen und Grenzen
 

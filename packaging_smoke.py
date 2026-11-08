@@ -7,12 +7,13 @@ import subprocess
 import sys
 import tempfile
 import threading
-from urllib.request import urlopen
+import time
+from urllib.request import urlopen, Request, build_opener, ProxyHandler
 
 
 def main():
     from xelavie_vmaf_check import vmaf_launcher as launcher
-    from xelavie_vmaf_check import vmaf_cli, vmaf_check, vmaf_settings
+    from xelavie_vmaf_check import vmaf_cli, vmaf_check, vmaf_settings, vmaf_background
     assert 'site-packages' in str(Path(launcher.__file__).resolve())
     version = importlib.metadata.version('xelavie-vmaf-check')
     assert vmaf_check.__version__.replace('-nightly.', '.dev') == version
@@ -43,7 +44,20 @@ def main():
             server.shutdown()
             server.server_close()
             thread.join(timeout=3)
-    print('Installed wheel: CLI, engine, UI assets, settings and version OK:', version)
+        # Exercise the packaged detached worker, without opening a browser.
+        state = vmaf_background.ensure_service(Path(launcher.__file__).resolve())
+        try:
+            again = vmaf_background.ensure_service(Path(launcher.__file__).resolve())
+            assert again['pid'] == state['pid'] and again['url'] == state['url']
+        finally:
+            request = Request(state['url']+'shutdown', data=b'{}', headers={'Content-Type':'application/json'})
+            with build_opener(ProxyHandler({})).open(request, timeout=5) as response:
+                assert json.load(response)['ok']
+            deadline = time.monotonic()+20
+            while vmaf_background.service_paths()[0].exists() and time.monotonic()<deadline:
+                time.sleep(.05)
+            assert not vmaf_background.service_paths()[0].exists(), 'Background service did not exit'
+    print('Installed wheel: CLI, engine, UI assets, settings, background lifecycle and version OK:', version)
 
 
 if __name__ == '__main__':

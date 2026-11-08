@@ -1,4 +1,4 @@
-XELAVIE VMAF CHECK 0.1.0-nightly.5
+XELAVIE VMAF CHECK 0.1.0-nightly.6
 
 Start, GUI, CLI-Argumente und Beispielbilder: siehe README.md.
 Dies ist eine Vorabversion. Echte HDR-/HLG-/DV-Videolaeufe sind noch
@@ -8,6 +8,11 @@ START UND ARGUMENTE
 Ohne Argumente: CLI-Hilfe, kein Formular und keine Startauswahl.
 Pruefung: xelavie-vmaf-check "Original.mkv" "Encode.mkv" --percent 25
 GUI:      xelavie-vmaf-check --gui
+GUI startet im Hintergrund. Nach Anzeige der lokalen URL darf das Terminal
+geschlossen werden. Tab/Browser schliessen laesst Pruefungen weiterlaufen.
+--gui oeffnet die laufende Sitzung erneut; "GUI beenden" beendet den Dienst
+und nach Bestaetigung eine laufende Pruefung. Vor Programmupdates beenden.
+Linux: Weiterlaufen nach vollstaendiger Abmeldung ist nicht garantiert.
 Portable: .\vmaf-check.cmd bzw. sh ./vmaf-check.sh mit denselben Argumenten.
 --gui wird separat verwendet. Die bisherigen Flags --ui und --cli entfallen.
 

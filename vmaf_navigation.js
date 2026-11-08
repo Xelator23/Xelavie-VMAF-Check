@@ -18,14 +18,14 @@
   const waiting=data.items.filter(x=>x.state==='pending').length;
   const active=data.items.filter(x=>x.state==='running').length;
   const failed=data.items.filter(x=>['failed','interrupted'].includes(x.state)).length;
-  $('queue-count').textContent=waiting+active;$('stats-waiting').textContent=waiting+' Filme warten';
-  $('queue-overview').textContent=active+' läuft · '+waiting+' warten · '+failed+' Fehler / unterbrochen';
-  $('queue-state').textContent=data.error|| (data.paused?'Warteschlange angehalten. Ein laufender Auftrag wird noch beendet.':'Aktiv · Bei Fehlern startet der nächste Auftrag automatisch.');
+  updateText('queue-count',waiting+active);updateText('stats-waiting',waiting+' Filme warten');
+  updateText('queue-overview',active+' läuft · '+waiting+' warten · '+failed+' Fehler / unterbrochen');
+  updateText('queue-state',data.error|| (data.paused?'Warteschlange angehalten. Ein laufender Auftrag wird noch beendet.':'Aktiv · Bei Fehlern startet der nächste Auftrag automatisch.'));
   $('queue-resume').hidden=!data.paused;$('queue-pause').hidden=data.paused;
-  const current=data.items.find(x=>x.state==='running');$('current-film').textContent=current?filename(current.data.encoded):'';
-  $('current-source').textContent=current?'Referenz: '+filename(current.data.reference)+' · '+(current.data.percent||100)+' % Prüfanteil':'';
-  if(current&&current.id!==activeId){$('protocol').open=false;activeId=current.id;}
-  const key=JSON.stringify(data);if(key===queueKey)return;queueKey=key;
+  const current=data.items.find(x=>x.state==='running');updateText('current-film',current?filename(current.data.encoded):'');
+  updateText('current-source',current?'Referenz: '+filename(current.data.reference)+' · '+(current.data.percent||100)+' % Prüfanteil':'');
+  if(current&&current.id!==activeId&&!reading($('protocol'))){$('protocol').open=false;activeId=current.id;}
+  const key=JSON.stringify(data);if(key===queueKey||reading($('queue-items')))return;queueKey=key;
   $('queue-items').replaceChildren();
   if(!data.items.length)$('queue-items').append(element('p','Noch keine Aufträge. Unter Dateiauswahl einen Vergleich hinzufügen.','muted'));
   const states={pending:'Wartet',running:'Läuft',done:'Abgeschlossen',failed:'Fehler / abgebrochen',interrupted:'Unterbrochen'};
@@ -49,11 +49,13 @@
   }
  }
  function drawLibrary(data){
-  const key=JSON.stringify([data,running]);if(key===libraryKey)return;libraryKey=key;
-  const stats=data.stats;$('results-count').textContent=stats.jobs;$('stats-files').textContent=number(stats.files);
-  $('stats-jobs').textContent=number(stats.jobs)+' erfolgreiche Prüfungen';$('stats-time').textContent=clock(stats.times.job_seconds);
-  $('stats-timed').textContent=stats.timed_jobs+' Prüfungen mit Zeitangaben';
-  for(const [id,key,label] of [['stats-measurement','measurement_seconds','Messzeit'],['stats-preparation','preparation_seconds','Vorbereitung'],['stats-finalization','finalization_seconds','Nachbereitung']])$(id).textContent=label+': '+clock(stats.times[key]);
+  const key=JSON.stringify([data,running]);
+  if(key===libraryKey||reading($('library-items'))||reading(document.querySelector('[data-view="dashboard"]')))return;
+  libraryKey=key;
+  const stats=data.stats;updateText('results-count',stats.jobs);updateText('stats-files',number(stats.files));
+  updateText('stats-jobs',number(stats.jobs)+' erfolgreiche Prüfungen');updateText('stats-time',clock(stats.times.job_seconds));
+  updateText('stats-timed',stats.timed_jobs+' Prüfungen mit Zeitangaben');
+  for(const [id,key,label] of [['stats-measurement','measurement_seconds','Messzeit'],['stats-preparation','preparation_seconds','Vorbereitung'],['stats-finalization','finalization_seconds','Nachbereitung']])updateText(id,label+': '+clock(stats.times[key]));
   $('stats-groups').replaceChildren();
   if(!stats.groups.length)$('stats-groups').append(element('p','Noch keine Ergebnisse.','muted'));
   for(const group of stats.groups){const row=element('div',undefined,'group-stat');row.append(element('strong',number(group.mean,2)),element('p',group.type.toUpperCase()+' · '+group.percent+' % · '+group.count+' Prüfungen · Modell '+group.model+' · '+group.display+' · Raster '+group.raster,'muted'),element('p',group.scope,'muted'));$('stats-groups').append(row);}
@@ -81,8 +83,8 @@
   }
  }
  async function refresh(){if(closed||busy)return;busy=true;try{
-  const queue=await api('queue');drawQueue(queue);$('sidebar-path').textContent='Arbeitsordner: '+$('work-dir').value;
-  if(counter++%5===0){const library=await api('library');drawLibrary(library);}
- }catch(e){$('global-error').textContent=e.message;}finally{busy=false;}}
+  const queue=await api('queue');if(closed)return;drawQueue(queue);updateText('sidebar-path','Arbeitsordner: '+$('work-dir').value);
+  if(counter++%5===0){const library=await api('library');if(closed)return;drawLibrary(library);}
+ }catch(e){if(!closed)updateText('global-error',e.message);}finally{busy=false;}}
  refresh();setInterval(refresh,1000);
 })();

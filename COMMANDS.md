@@ -1,6 +1,6 @@
 # Commands
 
-Alle CLI-Argumente für **Xelavie VMAF Check 0.1.0-nightly.5**. Die CLI wird über Dateipfade und Flags bedient; ohne Argumente erscheint eine kurze Starthilfe, mit `--help` die vollständige Hilfe. Es gibt keine interaktiven Rückfragen.
+Alle CLI-Argumente für **Xelavie VMAF Check 0.1.0-nightly.6**. Die CLI wird über Dateipfade und Flags bedient; ohne Argumente erscheint eine kurze Starthilfe, mit `--help` die vollständige Hilfe. Es gibt keine interaktiven Rückfragen.
 
 [Start und Hilfe](#start-und-hilfe) · [Prüfung](#prüfung) · [Crop](#crop) · [Farbangaben](#farbangaben) · [Dolby Vision](#dolby-vision) · [Programme und Modelle](#programme-und-modelle) · [Ordner](#ordner) · [Beispiele](#beispiele)
 
@@ -51,9 +51,11 @@ Diese Aufrufe benötigen keine Videodateien:
 | Ohne Argumente | Zeigt die kurze Starthilfe mit Dateipfad-Beispiel und beendet sich. |
 | `-h`, `--help` | Zeigt Hilfe und verfügbare Prüfoptionen. |
 | `--version` | Zeigt die Programmversion. |
-| `--gui` | Öffnet die lokale Browser-Oberfläche. **Allein verwenden**, ohne Dateipfade oder Prüfoptionen. |
+| `--gui` | Startet den GUI-Dienst im Hintergrund oder öffnet die bereits laufende Sitzung. **Allein verwenden**, ohne Dateipfade oder Prüfoptionen. |
 
 `--gui` gehört zum Launcher beziehungsweise zum installierten Befehl. Beim direkten Aufruf von `vmaf_check.py` ist es nicht verfügbar; verwende dafür `vmaf_launcher.py`. Die früheren Startflags `--ui` und `--cli` werden nicht mehr verwendet.
+
+Nach Anzeige der lokalen URL darf das Terminal geschlossen werden. Tab/Browser schließen beendet den Dienst nicht; Prüfungen laufen weiter. Mit `--gui` öffnest du dieselbe Sitzung erneut. **GUI beenden** stoppt den Dienst und nach Bestätigung auch eine laufende Prüfung. Unter Linux ist das Weiterlaufen nach vollständiger Abmeldung von der Sitzungskonfiguration abhängig. Vor Programmupdates den laufenden GUI-Dienst beenden.
 
 ## Prüfung
 

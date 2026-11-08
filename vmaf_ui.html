@@ -10,7 +10,7 @@ main{margin:0 auto;align-self:start}
 [data-view="queue"] .panel{padding:16px;margin-bottom:10px;border-radius:8px}[data-view="queue"] h2{font-size:15px;margin-bottom:5px}[data-view="queue"] .actions{margin:10px 0}[data-view="queue"] button{font-size:13px;padding:7px 11px}#queue-overview{margin-top:10px}#queue-active .monitor{border:1px solid var(--line);background:var(--surface);border-radius:8px;margin-bottom:10px;padding:16px}#queue-active .panel{border:0;padding:0;margin:0}#queue-active .monitor>.panel+section{margin-top:12px}#queue-active #current-film{font-size:15px;font-weight:600;color:var(--text);overflow-wrap:anywhere}#queue-active #status{font-size:12px;margin:4px 0}#queue-active #percentage{font-size:16px}#queue-active .progress-head{margin:12px 0 6px;font-size:12px}#queue-active .progress-track{height:7px}#queue-active .timers{display:flex;flex-wrap:wrap;gap:10px 24px;margin:10px 0}#queue-active .timers>div{display:flex;gap:8px;align-items:baseline}#queue-active .time-value{font-size:13px}#queue-active .progress-footer{border:0;padding-top:8px}#queue-active #estimate{font-size:12px}#queue-active details{font-size:13px}#queue-items .library-item h2{overflow-wrap:anywhere}#queue-active #analysis-report{display:none}
 #library-items .result-row{padding:14px 16px;margin-bottom:10px;border-radius:8px}.result-head{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:20px;align-items:center}.result-info{min-width:0}.result-info h2{font-size:14px;font-weight:600;margin:0 0 4px;overflow-wrap:anywhere}.result-info .muted{font-size:12px}.result-score{display:flex;flex-direction:column;font-variant-numeric:tabular-nums}.result-score strong{font-size:18px;font-weight:600}.result-head button{font-size:12px;padding:6px 10px;white-space:nowrap}.result-row details{margin-top:8px;font-size:12px}.result-row pre{margin:10px 0 0;font-size:12px}.result-hint{margin-bottom:10px}@media(max-width:850px){.result-head{grid-template-columns:minmax(0,1fr) auto;gap:10px}.result-info{grid-column:1/-1}.result-head button{justify-self:end}}@media(pointer:coarse){.result-head button,.result-row summary{min-height:44px}.result-row summary{display:flex;align-items:center}}
 </style></head><body><div class="app"><aside class="sidebar"><div class="brand"><img src="logo.png" alt="Xelavie"><span>VMAF Check</span></div><nav aria-label="Hauptnavigation"><button data-page="dashboard" aria-pressed="true">Dashboard</button><button data-page="files" aria-pressed="false">Dateiauswahl</button><button data-page="queue" aria-pressed="false">Warteschlange <span id="queue-count">0</span></button><button data-page="results" aria-pressed="false">Ergebnisse <span id="results-count">0</span></button></nav><p class="muted sidebar-path" id="sidebar-path"></p></aside><main>
-<header><div><h1 id="page-title">Dashboard</h1><p class="muted">Xelavie VMAF Check · Windows & Linux</p></div><button id="quit" type="button">UI beenden</button></header>
+<header><div><h1 id="page-title">Dashboard</h1><p class="muted">Xelavie VMAF Check · Windows & Linux</p></div><button id="quit" type="button">GUI beenden</button></header>
 <p id="global-error" role="alert"></p>
 <section data-view="dashboard"><div class="stats"><div class="panel"><p class="muted">Geprüfte Dateien</p><p class="stat-value" id="stats-files">0</p><p class="muted" id="stats-jobs">0 erfolgreiche Prüfungen</p></div><div class="panel"><p class="muted">Gesamte Joblaufzeit</p><p class="stat-value" id="stats-time">00:00:00</p><p class="muted" id="stats-timed"></p></div><div class="panel"><p class="muted">Aktivität</p><p id="stats-active">Bereit</p><p class="muted" id="stats-waiting"></p><button data-goto="queue" type="button">Warteschlange ansehen</button></div></div><div class="grid"><section class="panel"><h2>Durchschnittlicher VMAF</h2><div id="stats-groups"></div><p class="muted">Ungewichtetes Mittel je Vergleichsgruppe. Gelöschte Ergebnisse zählen nicht mit.</p></section><section class="panel"><h2>Zeitaufteilung</h2><p id="stats-measurement"></p><p id="stats-preparation"></p><p id="stats-finalization"></p></section></div></section>
 <section data-view="queue" hidden><div class="panel"><h2>Warteschlange</h2><p class="muted">Ein Film nach dem anderen · Einstellungen bleiben je Auftrag gespeichert.</p><div class="actions"><button id="queue-resume" type="button" class="primary">Starten / Fortsetzen</button><button id="queue-pause" type="button">Nach laufendem Auftrag anhalten</button><button data-goto="files" type="button">Dateien hinzufügen</button></div><p id="queue-state" class="muted"></p><p id="queue-overview" class="muted"></p></div><div id="queue-active" hidden></div><div id="queue-items"></div></section>
@@ -56,9 +56,30 @@ main{margin:0 auto;align-self:start}
 <p class="muted">Teststand: Bedienung und Offline-Logik geprüft; echte HDR-/DV-Videoläufe noch nicht validiert. Kein angezeigter Fortschritt ist ein geschätzter VMAF-Wert.</p>
 </section></main></div>
 <dialog id="picker" aria-labelledby="picker-title"><h2 id="picker-title">Lokale Datei auswählen</h2><div class="row"><input id="location" aria-label="Ordnerpfad"><button id="go" type="button">Öffnen</button><button id="up" type="button">↑ Ebene</button></div><div id="drives"></div><div id="filelist"></div><p id="picker-error" role="alert"></p><p id="truncated" class="muted"></p><div class="actions"><button id="choose-folder" type="button" class="primary">Diesen Ordner wählen</button><button id="close-picker" type="button">Schließen</button></div></dialog>
+<dialog id="shutdown-notice" aria-labelledby="shutdown-title"><h2 id="shutdown-title">GUI wird beendet</h2><p>Das Beenden wurde angefordert. Falls der Browser diesen Tab nicht automatisch schließt, kannst du ihn jetzt manuell schließen.</p></dialog>
 <script>
 const $=id=>document.getElementById(id);
 let running=false,closed=false,polling=false,pickTarget=null,pickFolder=false,currentDirectory='',parentDirectory='',lastPhase='';
+let selectionStart=null;
+document.addEventListener('pointerdown',event=>{if(event.button===0)selectionStart=event.target;},true);
+document.addEventListener('pointerup',()=>{selectionStart=null;},true);
+document.addEventListener('pointercancel',()=>{selectionStart=null;},true);
+document.addEventListener('pointermove',event=>{if(!(event.buttons&1))selectionStart=null;},true);
+window.addEventListener('blur',()=>{selectionStart=null;});
+function reading(node){
+ if(selectionStart&&node.contains(selectionStart))return true;
+ const selection=window.getSelection();
+ if(!selection||selection.isCollapsed)return false;
+ for(let i=0;i<selection.rangeCount;i++){
+  if(selection.getRangeAt(i).intersectsNode(node))return true;
+ }
+ return false;
+}
+function updateText(id,value){
+ const node=$(id),text=String(value??'');
+ if(node.textContent===text||reading(node))return false;
+ node.textContent=text;return true;
+}
 const choices={color:[['','Erkannte Angaben verwenden'],['bt709','BT.709 · Limited'],['hdr10','HDR10/PQ · Limited'],['hlg','HLG · Limited']],primaries:[['','Unverändert'],['bt709','BT.709'],['bt2020','BT.2020']],transfer:[['','Unverändert'],['bt709','BT.709'],['smpte2084','PQ / SMPTE 2084'],['arib-std-b67','HLG']],matrix:[['','Unverändert'],['bt709','BT.709'],['bt2020nc','BT.2020nc']],range:[['','Unverändert'],['limited','Limited'],['full','Full']]};
 for(const [part,label] of [['color','Preset'],['primaries','Primärfarben'],['transfer','Transferfunktion'],['matrix','Farbmatrix'],['range','Wertebereich']]){
  for(const [side,title] of [['ref','Original'],['enc','Encode']]){
@@ -80,54 +101,65 @@ $('form').addEventListener('submit',async event=>{
 });
 $('cancel').addEventListener('click',async()=>{try{await api('cancel',{});$('cancel').disabled=true;}catch(e){$('error').textContent=e.message;}});
 $('quit').addEventListener('click',async()=>{
- if(running&&!confirm('Laufende Prüfung abbrechen und UI beenden?'))return;
- try{await api('shutdown',{});closed=true;$('settings').disabled=true;$('cancel').disabled=true;$('quit').disabled=true;$('status').textContent='UI wird beendet. Dieser Tab kann geschlossen werden.';}catch(e){$('error').textContent=e.message;}
+ if(closed||$('quit').disabled)return;
+ if(running&&!confirm('Laufende Prüfung abbrechen und GUI beenden?'))return;
+ $('quit').disabled=true;
+ try{await api('shutdown',{});}
+ catch(e){$('quit').disabled=false;$('global-error').textContent=e.message;return;}
+ closed=true;$('settings').disabled=true;$('cancel').disabled=true;
+ $('status').textContent='GUI wird beendet.';
+ $('shutdown-notice').showModal();
+ try{window.close();}catch(e){/* The visible notice also covers blocked tab closing. */}
 });
+$('shutdown-notice').addEventListener('cancel',event=>event.preventDefault());
 $('dv-mode').addEventListener('change',()=>{
  $('scope').textContent=({'auto':'Bei Profil 7 wählt die Automatik einen Kompatibilitätsvergleich ohne vollständige FEL-Rekonstruktion.','compatible':'P7 wird zu P8.1 vorbereitet. Zusätzliche FEL-Bildinformationen werden nicht bewertet.','base-layer':'Nur gemeinsame HDR10-Basis: P7, P8.1, P10.1 oder HDR10. Keine DV-Metadatenbewertung.','rendered':'Single-Layer-P5/P8/P10 nach PQ. Profil 7 wird in diesem Modus abgelehnt.'})[$('dv-mode').value];
 });
 async function poll(){
  if(closed||polling)return;polling=true;
  try{
-  const data=await api('status');running=data.running;$('settings').disabled=false;$('start').disabled=running;$('cancel').disabled=!running||data.phase==='Wird abgebrochen';
-  $('stats-active').textContent=running?'Eine Prüfung läuft · '+(Number.isFinite(data.percent)?data.percent.toFixed(1)+' %':data.step):data.phase;
-  $('status').textContent=data.phase;
-  if(data.phase==='Fehler'&&lastPhase!=='Fehler')$('protocol').open=true;
-  if(data.running&&lastPhase!=='Laeuft'&&data.phase==='Laeuft')$('protocol').open=false;
-  lastPhase=data.phase;
+  const data=await api('status');if(closed)return;running=data.running;$('settings').disabled=false;$('start').disabled=running;$('cancel').disabled=!running||data.phase==='Wird abgebrochen';
+  updateText('stats-active',running?'Eine Prüfung läuft · '+(Number.isFinite(data.percent)?data.percent.toFixed(1)+' %':data.step):data.phase);
+  updateText('status',data.phase);
+  if(!reading($('protocol'))){
+   if(data.phase==='Fehler'&&lastPhase!=='Fehler')$('protocol').open=true;
+   if(data.running&&lastPhase!=='Laeuft'&&data.phase==='Laeuft')$('protocol').open=false;
+   lastPhase=data.phase;
+  }
   const hasPercent=Number.isFinite(data.percent), hasRemaining=Number.isFinite(data.remaining);
-  $('percentage').textContent=hasPercent?new Intl.NumberFormat('de-DE',{maximumFractionDigits:1}).format(data.percent)+' %':'—';
+  updateText('percentage',hasPercent?new Intl.NumberFormat('de-DE',{maximumFractionDigits:1}).format(data.percent)+' %':'—');
   $('progress-fill').style.width=hasPercent?data.percent+'%':'';
   $('progress-track').classList.toggle('indeterminate',running&&!hasPercent);
   if(hasPercent)$('progress-track').setAttribute('aria-valuenow',data.percent);else $('progress-track').removeAttribute('aria-valuenow');
-  $('progress-label').textContent=hasPercent?'Film verarbeitet':running?'Vorbereitung läuft':'Film verarbeitet';
-  $('step').textContent=data.phase==='Fertig'?'Messung und Ergebnisprüfung abgeschlossen.':data.step||data.phase;
-  $('elapsed').textContent=clock(data.elapsed||0);
-  $('queue-active').hidden=!running;
-  $('measurement-live').textContent=Number.isFinite(data.measurement_seconds)?'Messzeit '+clock(data.measurement_seconds)+(Number.isFinite(data.measurement_fps)?' · '+data.measurement_fps.toFixed(1)+' FPS (nur Messung)':''):'';
-  $('remaining').textContent=hasRemaining?(data.remaining?'ca. ':'')+clock(data.remaining):'—';
-  $('estimate').textContent=data.phase==='Fertig'?'Gesamtlaufzeit: '+clock(data.elapsed||0):hasRemaining?'Gesamtdauer geschätzt: ca. '+clock((data.elapsed||0)+data.remaining):running?'Restzeit wird aus dem Messfortschritt geschätzt.':'Keine laufende Schätzung.';
+  updateText('progress-label',hasPercent?'Film verarbeitet':running?'Vorbereitung läuft':'Film verarbeitet');
+  updateText('step',data.phase==='Fertig'?'Messung und Ergebnisprüfung abgeschlossen.':data.step||data.phase);
+  updateText('elapsed',clock(data.elapsed||0));
+  if(!reading($('queue-active')))$('queue-active').hidden=!running;
+  updateText('measurement-live',Number.isFinite(data.measurement_seconds)?'Messzeit '+clock(data.measurement_seconds)+(Number.isFinite(data.measurement_fps)?' · '+data.measurement_fps.toFixed(1)+' FPS (nur Messung)':''):'');
+  updateText('remaining',hasRemaining?(data.remaining?'ca. ':'')+clock(data.remaining):'—');
+  updateText('estimate',data.phase==='Fertig'?'Gesamtlaufzeit: '+clock(data.elapsed||0):hasRemaining?'Gesamtdauer geschätzt: ca. '+clock((data.elapsed||0)+data.remaining):running?'Restzeit wird aus dem Messfortschritt geschätzt.':'Keine laufende Schätzung.');
   const bottom=$('log').scrollHeight-$('log').scrollTop-$('log').clientHeight<40;
-  $('log').textContent=data.logs.join('\n')||'Noch keine Prüfung gestartet.';if(bottom)$('log').scrollTop=$('log').scrollHeight;
-  $('result').textContent=data.result?'Ergebnisse: '+data.result:'';
-  $('command').textContent=data.command.map(s=>JSON.stringify(s)).join(' ');
+  const logChanged=updateText('log',data.logs.join('\n')||'Noch keine Prüfung gestartet.');
+  if(logChanged&&bottom)$('log').scrollTop=$('log').scrollHeight;
+  updateText('result',data.result?'Ergebnisse: '+data.result:'');
+  updateText('command',data.command.map(s=>JSON.stringify(s)).join(' '));
   renderReport(data.report);
- }catch(error){$('status').textContent='Lokaler Dienst nicht erreichbar.';}finally{polling=false;}
+ }catch(error){if(!closed)updateText('status','Lokaler Dienst nicht erreichbar.');}finally{polling=false;}
 }
 function renderReport(report){
- $('analysis-report').hidden=!report;if(!report)return;
+ if(!reading($('analysis-report')))$('analysis-report').hidden=!report;if(!report)return;
  const number=(n,d=0)=>new Intl.NumberFormat('de-DE',{minimumFractionDigits:d,maximumFractionDigits:d}).format(n);
  const filename=path=>String(path).split(/[\\/]/).pop();
- $('report-date').textContent=new Date(report.completed_at).toLocaleString('de-DE');
- $('report-encode').textContent=filename(report.encoded);$('report-reference').textContent=filename(report.reference);
- $('report-scope').textContent='Kompletter Film · '+report.percent+' % der Frames bewertet';
- $('report-score').textContent=number(report.mean,6);$('report-comparison').textContent=report.dv_comparison.scope;
- $('report-fps').textContent=number(report.timing.measurement_fps,2)+' FPS';
- $('report-measurement').textContent=clock(report.timing.measurement_seconds);
- $('report-preparation').textContent=clock(report.timing.preparation_seconds);
- $('report-job').textContent=clock(report.timing.job_seconds);
- $('report-frames').textContent='Frames verarbeitet: '+number(report.total_frames)+' / '+number(report.total_frames);
- $('report-scored').textContent='Frames bewertet: '+number(report.scored_frames)+' / '+number(Math.ceil(report.total_frames/report.subsample));
+ updateText('report-date',new Date(report.completed_at).toLocaleString('de-DE'));
+ updateText('report-encode',filename(report.encoded));updateText('report-reference',filename(report.reference));
+ updateText('report-scope','Kompletter Film · '+report.percent+' % der Frames bewertet');
+ updateText('report-score',number(report.mean,6));updateText('report-comparison',report.dv_comparison.scope);
+ updateText('report-fps',number(report.timing.measurement_fps,2)+' FPS');
+ updateText('report-measurement',clock(report.timing.measurement_seconds));
+ updateText('report-preparation',clock(report.timing.preparation_seconds));
+ updateText('report-job',clock(report.timing.job_seconds));
+ updateText('report-frames','Frames verarbeitet: '+number(report.total_frames)+' / '+number(report.total_frames));
+ updateText('report-scored','Frames bewertet: '+number(report.scored_frames)+' / '+number(Math.ceil(report.total_frames/report.subsample)));
 }
 function clock(seconds){seconds=Math.max(0,Math.floor(seconds));return [Math.floor(seconds/3600),Math.floor(seconds/60)%60,seconds%60].map(n=>String(n).padStart(2,'0')).join(':');}
 function choose(path){$(pickTarget).value=path;$(pickTarget).dispatchEvent(new Event('change'));$('picker').close();}

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.0-nightly.6
+
+- `--gui` startet unter Windows und Linux im Hintergrund; das Terminal kann anschließend geschlossen werden.
+- Ein erneuter GUI-Aufruf öffnet dieselbe Sitzung. Prozesssperre, Startdiagnosen und Wiederanlauf nach veralteten Sitzungsdaten ergänzt.
+- „GUI beenden“ stoppt den Dienst und versucht den Browser-Tab zu schließen; bei Browserbeschränkungen erscheint ein Hinweis.
+- Textmarkierungen bleiben bei automatischen Aktualisierungen erhalten. Unveränderte Texte werden nicht neu geschrieben; markierte Bereiche nach Ende der Auswahl aktualisiert.
+- Ausrichtung der CHECK-Buchstaben im CLI-Banner korrigiert.
+- Hintergrundstart, Wiederverbindung, Abbruch und installierte Pakete unter Windows und auf Ubuntu geprüft.
+
 ## 0.1.0-nightly.5
 
 - Kompakte CLI-Starthilfe mit klarer Reihenfolge: Original/Remux zuerst, Encode danach.

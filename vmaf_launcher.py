@@ -202,6 +202,8 @@ class Server(ThreadingHTTPServer):
     daemon_threads=True
     def __init__(self):
         super().__init__(('127.0.0.1',0),Handler)
+        self.closing=threading.Event()
+        self.shutdown_lock=threading.Lock()
         self.token=secrets.token_urlsafe(32); self.job=Job()
         self.queue=Queue(self.job,build_command)
         self.origin=f'http://127.0.0.1:{self.server_port}'
@@ -210,6 +212,18 @@ class Server(ThreadingHTTPServer):
     def server_close(self):
         self.queue.close()
         super().server_close()
+
+    def request_shutdown(self):
+        with self.shutdown_lock:
+            if self.closing.is_set(): return
+            self.closing.set()
+        def close():
+            try:
+                self.queue.close()
+                self.job.cancel()
+            finally:
+                self.shutdown()
+        threading.Thread(target=close,daemon=True).start()
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -239,6 +253,13 @@ class Handler(BaseHTTPRequestHandler):
         route=self.route()
         try:
             if route=='': self.respond((HERE/'vmaf_ui.html').read_text(encoding='utf-8'),html=True)
+            elif route=='health':
+                if __package__:
+                    from .vmaf_check import __version__
+                else:
+                    from vmaf_check import __version__
+                self.respond({'application':'xelavie-vmaf-check','pid':os.getpid(),
+                              'version':__version__,'closing':self.server.closing.is_set()})
             elif route=='status': self.respond(self.server.job.snapshot())
             elif route=='settings': self.respond({'work_dir':str(work_directory())})
             elif route=='queue': self.respond(self.server.queue.snapshot())
@@ -261,6 +282,8 @@ class Handler(BaseHTTPRequestHandler):
         route=self.route()
         if route not in ('start','cancel','shutdown','settings','enqueue','queue','delete-result'):
             self.respond({'error':'Nicht erlaubt.'},403); return
+        if self.server.closing.is_set():
+            self.respond({'error':'GUI wird beendet.'},409); return
         try:
             if self.headers.get('Content-Type','').split(';')[0]!='application/json': raise ValueError('JSON erforderlich.')
             length=int(self.headers.get('Content-Length','0'))
@@ -277,25 +300,26 @@ class Handler(BaseHTTPRequestHandler):
                 self.server.queue.action('pause')
                 threading.Thread(target=self.server.job.cancel,daemon=True).start()
             elif route=='shutdown':
-                def close():
-                    self.server.queue.close()
-                    self.server.job.cancel(); self.server.shutdown()
-                threading.Thread(target=close,daemon=True).start()
+                self.server.request_shutdown()
             self.respond({'ok':True})
         except (ValueError,OSError) as exc: self.respond({'error':str(exc)},400)
 
 
 def ui():
-    server=Server(); url=server.origin+server.prefix
-    print('Lokale UI:',url,flush=True)
-    print('Beenden ueber die UI oder Strg+C. Tab schliessen beendet den Dienst nicht.',flush=True)
+    if __package__:
+        from .vmaf_background import ensure_service
+    else:
+        from vmaf_background import ensure_service
+    state=ensure_service(Path(__file__).resolve())
+    url=state['url']
+    print('GUI laeuft im Hintergrund:',url,flush=True)
+    print('PowerShell/Terminal und Browser duerfen geschlossen werden.\n'
+          'Erneut oeffnen: --gui. Beenden: "GUI beenden" in der Oberflaeche.',flush=True)
     try:
-        webbrowser.open(url)
-        server.serve_forever(poll_interval=.3)
-    except KeyboardInterrupt: pass
-    finally:
-        server.queue.close()
-        server.job.cancel(); server.server_close()
+        if not webbrowser.open(url):
+            print('Kein Browser gestartet. Die lokale URL manuell oeffnen.',flush=True)
+    except webbrowser.Error:
+        print('Kein Browser gestartet. Die lokale URL manuell oeffnen.',flush=True)
     return 0
 
 
@@ -304,13 +328,26 @@ def print_banner():
         from .vmaf_check import __version__
     else:
         from vmaf_check import __version__
-    lettering = (
-        '██╗   ██╗███╗   ███╗ █████╗ ███████╗     ██████╗██╗  ██╗███████╗ ██████╗██╗  ██╗',
-        '██║   ██║████╗ ████║██╔══██╗██╔════╝    ██╔════╝██║  ██║██╔════╝██╔════╝██║ ██╔╝',
-        '██║   ██║██╔████╔██║███████║█████╗      ██║     ███████║█████╗  ██║     █████╔╝',
-        '╚██╗ ██╔╝██║╚██╔╝██║██╔══██║██╔══╝     ██║     ██╔══██║██╔══╝  ██║     ██╔═██╗',
-        ' ╚████╔╝ ██║ ╚═╝ ██║██║  ██║██║         ╚██████╗██║  ██║███████╗╚██████╗██║  ██╗',
-        '  ╚═══╝  ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝          ╚═════╝╚═╝  ╚═╝╚══════╝ ╚═════╝╚═╝  ╚═╝',
+    vmaf = (
+        '██╗   ██╗███╗   ███╗ █████╗ ███████╗',
+        '██║   ██║████╗ ████║██╔══██╗██╔════╝',
+        '██║   ██║██╔████╔██║███████║█████╗',
+        '╚██╗ ██╔╝██║╚██╔╝██║██╔══██║██╔══╝',
+        ' ╚████╔╝ ██║ ╚═╝ ██║██║  ██║██║',
+        '  ╚═══╝  ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝',
+    )
+    check_glyphs = {
+        'C': (' ██████╗', '██╔════╝', '██║', '██║', '╚██████╗', ' ╚═════╝'),
+        'H': ('██╗  ██╗', '██║  ██║', '███████║', '██╔══██║', '██║  ██║', '╚═╝  ╚═╝'),
+        'E': ('███████╗', '██╔════╝', '█████╗', '██╔══╝', '███████╗', '╚══════╝'),
+        'K': ('██╗  ██╗', '██║ ██╔╝', '█████╔╝', '██╔═██╗', '██║  ██╗', '╚═╝  ╚═╝'),
+    }
+    # Fixed character cells keep every CHECK letter aligned across all six rows.
+    left_width = max(map(len, vmaf))
+    lettering = tuple(
+        left.ljust(left_width) + '    ' +
+        ''.join(check_glyphs[letter][row].ljust(8) for letter in 'CHECK')
+        for row, left in enumerate(vmaf)
     )
     width = max(len(line) for line in lettering)
     version_label = f'▓▓▒▒░░ [ {__version__} ] '
@@ -355,6 +392,12 @@ def print_quick_start():
 
 def main():
     args=sys.argv[1:]
+    if args==['--_gui-service']:
+        if __package__:
+            from .vmaf_background import run_service
+        else:
+            from vmaf_background import run_service
+        return run_service(Server)
     if args==['--gui']: return ui()
     if '--gui' in args:
         raise ValueError('--gui separat aufrufen. Dateien und Einstellungen in der GUI auswaehlen.')
