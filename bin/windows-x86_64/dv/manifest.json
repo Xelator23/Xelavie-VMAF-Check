@@ -1,0 +1,8 @@
+{
+  "executable": "xelavie-dv-render.exe",
+  "sha256": {
+    "roi.json": "3585b9becdfb38de38bd8887badc909ed6818467630464c586ca14cbe5e950c7",
+    "xelavie-dv-render.exe": "7526db77b7c909aaf9908f6be736b6f97bce041c1eb09d2ec0e9b7ea2585a1c5",
+    "xelavie-roi.dll": "2081c3a7d527aa63af425bbc840e4ed6d5440ce8559a9b4169421b69c0f056da"
+  }
+}

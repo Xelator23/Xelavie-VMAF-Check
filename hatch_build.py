@@ -14,7 +14,7 @@ class CustomBuildHook(BuildHookInterface):
             rebuilt=Path(temporary)/artifact.name
             with zipfile.ZipFile(artifact) as source,zipfile.ZipFile(rebuilt,'w') as target:
                 for info in source.infolist():
-                    if '/bin/linux-' in info.filename and info.filename.endswith('/xelavie-hdr-worker'):
+                    if '/bin/linux-' in info.filename and info.filename.endswith(('/xelavie-hdr-worker','/xelavie-dv-render')):
                         info.create_system=3
                         info.external_attr=0o100755<<16
                     target.writestr(info,source.read(info.filename))

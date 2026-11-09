@@ -1,0 +1,5 @@
+Corresponding source and build recipes:
+https://github.com/Xelator23/Xelavie-VMAF-Check/releases/tag/v0.1.0-nightly.10
+Asset: Xelavie-DV-Renderer-0.1.0-nightly.10-Source.tar.gz
+FFmpeg is GPL-2.0-or-later; libplacebo LGPL-2.1-or-later. See included license texts.
+The renderer is a separate subprocess; project Python code remains MIT.

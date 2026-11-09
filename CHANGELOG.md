@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.0-nightly.10
+
+- Integrierter CPU-DV-Renderer für 10-Bit-4:2:0-MKV mit HEVC/AV1 unter Windows x64 und Linux x86_64: P010-Eingang, direkter P016-Transport, gemeinsame Chroma-Verarbeitung und Crop-ROI mit Randbereich.
+- Begrenzter Tonwert-/Farbraum-Schnellpfad mit vollständiger Berechnung für kritische Pixel. Kleine Score-Abweichungen möglich; keine bitidentische Messung zu nightly.9. Aktivierung nur pro DV-Decoderprozess, keine systemweite Vulkan-Layer-Installation.
+- `--dv-renderer classic` verwendet die klassische DV-Farbberechnung; nicht unterstützte Formate behalten diese automatisch. SDR/HDR ohne DV nutzt den bisherigen Renderer.
+- Getestete Renderer, benötigte Bibliotheken und Lizenzhinweise werden in Windows-/Linux-Paketen und im uv-Wheel mitgeliefert. Zugehöriges Quellpaket beim Release.
+- Direktvergleich gegen nightly.9 am gleichen 12,012-s-Filmausschnitt, 25 %, Median aus drei Paaren: Windows 43,7 %, Linux 47,7 % weniger Messzeit. Inklusive Clipvorbereitung 36,4 % / 44,5 %. Maximale Einzelbildabweichung 0,0152 VMAF-Punkte. Keine garantierte Vollfilmzeit.
+- 100-%-Kurzprüfung sowie Profil-/Farbtests; vollständige HDR-/DV-Filmläufe bleiben noch unvalidiert. Profil 7 weiterhin P8.1-Kompatibilitätsvergleich ohne vollständige FEL-Rekonstruktion.
+
+
 ## 0.1.0-nightly.9
 
 - HDR-Messung über gebündelten nativen x64-Worker mit libvmaf/zimg; behebt `libvmaf was built without zimg support`. HDR-Vorabtest verlangt nun eine erfolgreiche Messung und die Ablehnung unbekannter Farbangaben.

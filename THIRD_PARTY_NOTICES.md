@@ -18,3 +18,7 @@ Die MIT-Lizenz dieses Repositorys gilt für den Xelavie-VMAF-Check-Projektcode. 
 | [Python](https://www.python.org/psf/license/) / [python-build-standalone](https://github.com/astral-sh/python-build-standalone) | Optional heruntergeladene Laufzeit. |
 
 Für eine eigene Weiterverteilung dieser Komponenten gelten deren jeweilige Lizenz- und Quellenhinweise. Produkt- und Projektnamen bezeichnen die jeweiligen unabhängigen Projekte und implizieren keine Verbindung oder Zertifizierung.
+
+## Mitgelieferter DV-Renderer ab nightly.10
+
+`bin/<Plattform>/dv/xelavie-dv-render` ist ein separater GPL-FFmpeg-Prozess mit statischem libplacebo, zimg und Shader-Compiler; Windows enthält außerdem dav1d statisch, Linux liefert libdav1d.so.7 mit. Der Linux-Build enthält auch libvmaf. Die jeweiligen Lizenztexte stehen unter `dv/licenses`. Der ROI-Layer ist MIT-lizenziert. Vollständige zugehörige Quellarchive, Änderungen, Buildkonfigurationen und Rezepte: Release-Anhang `Xelavie-DV-Renderer-0.1.0-nightly.10-Source.tar.gz` und `native/dv/`. Die MIT-Lizenz des Python-Projekts ersetzt die Lizenzen dieser separaten Komponenten nicht.

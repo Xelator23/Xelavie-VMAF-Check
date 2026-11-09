@@ -1,4 +1,4 @@
-XELAVIE VMAF CHECK 0.1.0-nightly.9
+XELAVIE VMAF CHECK 0.1.0-nightly.10
 
 Start, GUI, CLI-Argumente und Beispielbilder: siehe README.md.
 Dies ist eine Vorabversion. Echte HDR-/HLG-/DV-Videolaeufe sind noch

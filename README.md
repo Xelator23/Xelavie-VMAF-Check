@@ -17,7 +17,7 @@
 
 Vergleiche einen Encode mit seiner Originaldatei über den gesamten Film. Xelavie VMAF Check organisiert FFmpeg, Modelle, Crop-Erkennung und Ergebnisberichte. Deine Videos bleiben auf deinem Rechner.
 
-**Aktueller Stand: `0.1.0-nightly.9` · Release-Kanal: `nightly` · MIT-Lizenz**
+**Aktueller Stand: `0.1.0-nightly.10` · Release-Kanal: `nightly` · MIT-Lizenz**
 
 Dies ist eine Vorabversion. Die erste stabile Veröffentlichung ist als `v0.1.0` vorgesehen. Echte SDR-Prüfungen unter Windows wurden durchgeführt; HDR-/Dolby-Vision-Kurztests unter Windows und Linux sind durchgeführt; vollständige HDR-/HLG-/DV-Filmläufe sind noch nicht validiert.
 
@@ -99,7 +99,7 @@ uv tool install git+https://github.com/Xelator23/Xelavie-VMAF-Check.git
 Ohne Versionszusatz wird der aktuelle Entwicklungsstand installiert. Für die konkret veröffentlichte Nightly stattdessen:
 
 ```sh
-uv tool install "git+https://github.com/Xelator23/Xelavie-VMAF-Check.git@v0.1.0-nightly.9"
+uv tool install "git+https://github.com/Xelator23/Xelavie-VMAF-Check.git@v0.1.0-nightly.10"
 ```
 
 uv richtet eine eigene Python-Umgebung ein und kann bei Bedarf eine passende Python-Version beschaffen. Falls der Startbefehl nicht gefunden wird: `uv tool update-shell` ausführen und das Terminal neu öffnen. Anschließend mit den beiden Dateipfaden starten, wie unter [Filme prüfen](#filme-prüfen--nach-der-installation) gezeigt. Ohne Argumente erscheint nur die kurze Starthilfe.
@@ -118,23 +118,23 @@ Deinstallation: `uv tool uninstall xelavie-vmaf-check`. Einstellungen und Ergebn
 
 ## Portable und optionales Wheel
 
-Unter [Releases](https://github.com/Xelator23/Xelavie-VMAF-Check/releases/tag/v0.1.0-nightly.9) stehen weiterhin getrennte Pakete bereit:
+Unter [Releases](https://github.com/Xelator23/Xelavie-VMAF-Check/releases/tag/v0.1.0-nightly.10) stehen weiterhin getrennte Pakete bereit:
 
 | Variante | Download | Start |
 | --- | --- | --- |
-| Windows portable | `Xelavie-VMAF-Check-0.1.0-nightly.9-Windows.zip` | `vmaf-check.cmd` |
-| Linux portable | `Xelavie-VMAF-Check-0.1.0-nightly.9-Linux.tar.gz` | `sh ./vmaf-check.sh` |
-| Optional: uv ohne Git | `xelavie_vmaf_check-0.1.0.dev9-py3-none-any.whl` | `xelavie-vmaf-check` |
+| Windows portable | `Xelavie-VMAF-Check-0.1.0-nightly.10-Windows.zip` | `vmaf-check.cmd` |
+| Linux portable | `Xelavie-VMAF-Check-0.1.0-nightly.10-Linux.tar.gz` | `sh ./vmaf-check.sh` |
+| Optional: uv ohne Git | `xelavie_vmaf_check-0.1.0.dev10-py3-none-any.whl` | `xelavie-vmaf-check` |
 
 Portable benötigt Python 3.10+ oder bereits installiertes uv. Vor dem Entpacken beziehungsweise Installieren eines Release-Pakets dessen SHA256 gemäß [Installationsanleitung](INSTALLATION.md) prüfen. Kein `curl | bash`, kein `irm | iex` und keine Administratorrechte für das portable Paket.
 
 Das Wheel ist eine zusätzliche Möglichkeit für Nutzer mit uv, aber ohne Git:
 
 ```sh
-uv tool install --python 3.12 ./xelavie_vmaf_check-0.1.0.dev9-py3-none-any.whl
+uv tool install --python 3.12 ./xelavie_vmaf_check-0.1.0.dev10-py3-none-any.whl
 ```
 
-Wheel-Updates: neues Wheel herunterladen, prüfen und mit `uv tool install --reinstall --python 3.12 ./DATEINAME.whl` installieren. `0.1.0.dev9` ist die Python-Paketbezeichnung für `0.1.0-nightly.9`.
+Wheel-Updates: neues Wheel herunterladen, prüfen und mit `uv tool install --reinstall --python 3.12 ./DATEINAME.whl` installieren. `0.1.0.dev10` ist die Python-Paketbezeichnung für `0.1.0-nightly.10`.
 
 Alle Wege verwenden denselben Prüfcode und dieselbe UI. FFmpeg und Modelle werden bei Bedarf separat heruntergeladen; Treiber werden nicht installiert. Das Projekt ist noch nicht auf PyPI veröffentlicht: Der Installationsbefehl benötigt deshalb die GitHub-URL oder eine Wheel-Datei.
 
@@ -194,7 +194,7 @@ Direkter Start mit bekannten BT.709-Limited-Quellen:
 ### Linux
 
 ```sh
-tar -xzf Xelavie-VMAF-Check-0.1.0-nightly.9-Linux.tar.gz
+tar -xzf Xelavie-VMAF-Check-0.1.0-nightly.10-Linux.tar.gz
 cd Xelavie-VMAF-Check
 sh ./vmaf-check.sh
 ```
@@ -314,3 +314,11 @@ Fehler und Verbesserungsvorschläge bitte über [Issues](https://github.com/Xela
 Der Projektcode steht unter der [MIT-Lizenz](LICENSE). Separat heruntergeladene Programme und Modelle behalten ihre eigenen Lizenzen; siehe [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 Basierend auf [Netflix VMAF](https://github.com/Netflix/vmaf), [FFmpeg](https://ffmpeg.org/), [BtbN FFmpeg Builds](https://github.com/BtbN/FFmpeg-Builds), [dovi_tool](https://github.com/quietvoid/dovi_tool), [libplacebo](https://code.videolan.org/videolan/libplacebo) und [uv](https://github.com/astral-sh/uv). Dies ist ein unabhängiges Projekt, keine Dolby-zertifizierte Prüflösung.
+
+## CPU-DV-Optimierung ab nightly.10
+
+Der optimierte Renderer ist in den portablen Paketen und der uv-Installation enthalten und wird für HEVC-/AV1-MKV mit 10-Bit-4:2:0-Dolby-Vision automatisch verwendet. Mesa Lavapipe bleibt erforderlich; keine GPU nötig. Linux: x86_64 mit glibc ab 2.38, getestet auf Ubuntu 24.04. Auf älteren Distributionen `--dv-renderer classic` mit einem passenden eigenen FFmpeg verwenden. Keine zusätzliche Installation des Renderers nötig.
+
+Der begrenzte Farb-Schnellpfad kann kleine VMAF-Abweichungen erzeugen. Der Ergebnisbericht protokolliert den verwendeten Renderer und seine Prüfsummen. Für die klassische Farbberechnung: `--dv-renderer classic`. Andere Container, Pixelformate und Architekturen behalten automatisch den klassischen Ablauf. Eine beschädigte benötigte Komponente führt zu einem Fehler statt zu einem stillen Methodenwechsel.
+
+Direkter Kurzvergleich zu nightly.9: **43,7 % weniger Messzeit unter Windows, 47,7 % unter Linux** (12,012 Filmsekunden, 25 %, Median aus drei Paaren). Mit Vorbereitung 36,4 % bzw. 44,5 %. Größte Abweichung pro bewertetem Bild 0,0152 VMAF-Punkte. Dies ist keine garantierte Ersparnis für jeden Film und kein abgeschlossener Vollfilmtest. Der Pixelgrenzwert ist keine allgemeine Fehlerschranke. [Messumfang und Grenzen](docs/DV-BENCHMARK.md).

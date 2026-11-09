@@ -1,0 +1,14 @@
+[
+  [
+    "static const char *const var_names[] = {",
+    "\n#include <libplacebo/dispatch.h>\nstatic void xelavie_audit_pass(void *priv, const struct pl_render_info *info)\n{\n    if (!getenv(\"XELAVIE_AUDIT_SHADERS\")) return;\n    const struct pl_dispatch_info *p = info->pass;\n    av_log(priv, AV_LOG_WARNING, \"XELAVIE_AUDIT_PASS stage=%d index=%d last_ns=%llu description=%s\\n\",\n        info->stage, info->index, (unsigned long long) p->last,\n        p->shader ? p->shader->description : \"unknown\");\n}\nstatic const char *const var_names[] = {"
+  ],
+  [
+    "opts->params = (struct pl_render_params) {\n        PL_RENDER_DEFAULTS",
+    "opts->params = (struct pl_render_params) {\n        PL_RENDER_DEFAULTS\n        .info_callback = xelavie_audit_pass,\n        .info_priv = ctx,"
+  ],
+  [
+    "        update_crops(ctx, in, &target, target_pts);",
+    "        update_crops(ctx, in, &target, target_pts);\n        if (getenv(\"XELAVIE_NEUTRAL_TARGET\")) {\n            av_assert0(s->nb_inputs == 1 && in->mix.num_frames > 0);\n            const AVFrame *reference = ref_frame(&in->mix);\n            const struct pl_frame *source = NULL;\n            for (int m = 0; m < in->mix.num_frames; m++)\n                if (pl_get_mapped_avframe(in->mix.frames[m]) == reference)\n                    source = in->mix.frames[m];\n            av_assert0(source != NULL);\n            av_assert0(source->repr.sys == PL_COLOR_SYSTEM_DOLBYVISION && source->repr.dovi != NULL);\n            av_assert0(source->color.primaries == PL_COLOR_PRIM_BT_2020 && source->color.transfer == PL_COLOR_TRC_PQ);\n            av_assert0(target.color.primaries == PL_COLOR_PRIM_BT_2020 && target.color.transfer == PL_COLOR_TRC_PQ);\n            // Signal reconstruction stays active. Prevent an additional\n            // adaptation from this signal to an inferred display target.\n            target.color = source->color;\n        }\n"
+  ]
+]

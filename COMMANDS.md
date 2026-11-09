@@ -1,6 +1,6 @@
 # Commands
 
-Alle CLI-Argumente für **Xelavie VMAF Check 0.1.0-nightly.9**. Die CLI wird über Dateipfade und Flags bedient; ohne Argumente erscheint eine kurze Starthilfe, mit `--help` die vollständige Hilfe. Es gibt keine interaktiven Rückfragen.
+Alle CLI-Argumente für **Xelavie VMAF Check 0.1.0-nightly.10**. Die CLI wird über Dateipfade und Flags bedient; ohne Argumente erscheint eine kurze Starthilfe, mit `--help` die vollständige Hilfe. Es gibt keine interaktiven Rückfragen.
 
 [Start und Hilfe](#start-und-hilfe) · [Prüfung](#prüfung) · [Crop](#crop) · [Farbangaben](#farbangaben) · [Dolby Vision](#dolby-vision) · [Programme und Modelle](#programme-und-modelle) · [Ordner](#ordner) · [Beispiele](#beispiele)
 
@@ -188,3 +188,9 @@ xelavie-vmaf-check --version
 ```
 
 Zurück zur [README](README.md) · [Installation](INSTALLATION.md) · [uv und Git einrichten](UV_UND_GIT.md) · [Technische Details](ANLEITUNG.txt)
+
+### DV-Renderer
+
+| Argument | Werte / Standard | Beschreibung |
+| --- | --- | --- |
+| `--dv-renderer` | `optimized` (Standard), `classic` | Optimierter CPU-DV-Ablauf für unterstützte MKV-Dateien oder klassische Farbverarbeitung. Der optimierte Schnellpfad erlaubt kleine Scoreabweichungen. |

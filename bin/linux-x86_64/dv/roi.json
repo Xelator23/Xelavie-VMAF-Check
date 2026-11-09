@@ -1,0 +1,11 @@
+{
+  "file_format_version": "1.2.0",
+  "layer": {
+    "name": "VK_LAYER_Xelavie_ROI",
+    "type": "GLOBAL",
+    "library_path": "./xelavie-roi.so",
+    "api_version": "1.3.0",
+    "implementation_version": "1",
+    "description": "Xelavie per-decoder CPU crop region"
+  }
+}

@@ -14,7 +14,12 @@ from urllib.request import urlopen, Request, build_opener, ProxyHandler
 def main():
     from xelavie_vmaf_check import vmaf_launcher as launcher
     from xelavie_vmaf_check import vmaf_cli, vmaf_check, vmaf_settings, vmaf_background
-    from xelavie_vmaf_check import vmaf_hdr
+    from xelavie_vmaf_check import vmaf_hdr, vmaf_dv
+    folder,manifest=vmaf_dv.verified_bundle()
+    env=dict(os.environ)
+    if os.name!="nt":env["LD_LIBRARY_PATH"]=str(folder)
+    renderer=subprocess.run([str(folder/manifest["executable"]),"-version"],env=env,capture_output=True,text=True,timeout=10)
+    assert renderer.returncode==0,renderer.stderr
     native=subprocess.run([vmaf_hdr.worker_path(),'--version'],capture_output=True,text=True,timeout=10)
     assert native.returncode==0,native.stderr
     assert 'protocol=2' in native.stdout and 'sparse25=1' in native.stdout

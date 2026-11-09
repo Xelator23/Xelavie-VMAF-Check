@@ -138,7 +138,7 @@ def frame_pairs(reference,encoded,size,plan=None):
             raise RuntimeError('HDR-Decoder liefern mehr Frames als erwartet.')
 
 
-def evaluate(commands,width,height,threads,step,root,log,progress,plan=None):
+def evaluate(commands,width,height,threads,step,root,log,progress,plan=None,decoder_envs=None):
     """commands order is reference, distorted. All children are reaped on failure."""
     worker=worker_command(width,height,threads,step)
     compact=bool(plan and step==4 and compact_model_supported(Path(root)/'model.json')
@@ -150,7 +150,7 @@ def evaluate(commands,width,height,threads,step,root,log,progress,plan=None):
     try:
         for index,cmd in enumerate(commands):
             error=open(str(log)+f'.decoder{index}.log','wb');logs.append(error)
-            children.append(subprocess.Popen(cmd,cwd=root,stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=error))
+            children.append(subprocess.Popen(cmd,cwd=root,stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=error,env=decoder_envs[index] if decoder_envs else None))
         error=open(log,'wb');logs.append(error)
         consumer=subprocess.Popen(worker,cwd=root,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=error)
         children.append(consumer)

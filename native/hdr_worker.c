@@ -133,7 +133,7 @@ int main(int argc,char **argv){
   if(n%4==0){if(converted(ctx,&dist,model,&convert[1]))return 4;encs++;}
   else if(vmaf_picture_ref(&dist,&last))return 4;
   if(vmaf_read_pictures(ctx,&ref,&dist,n))return 5;
-  printf("frame=%u\n",n+1);
+  printf("frame=%u\n",n+1);fflush(stdout);
  }
  if(fgetc(stdin)!=EOF||ferror(stdin))return 6;
  if(last.priv)vmaf_picture_unref(&last);

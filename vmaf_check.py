@@ -18,10 +18,10 @@ import time
 from datetime import datetime
 if __package__:
     from .vmaf_settings import work_directory, save_work_directory
-    from . import vmaf_hdr
+    from . import vmaf_dv, vmaf_hdr
 else:
     from vmaf_settings import work_directory, save_work_directory
-    import vmaf_hdr
+    import vmaf_dv, vmaf_hdr
 import tarfile
 import tempfile
 import urllib.request
@@ -29,7 +29,7 @@ import urllib.error
 import zipfile
 from fractions import Fraction
 
-__version__ = '0.1.0-nightly.9'
+__version__ = '0.1.0-nightly.10'
 
 COLOR_FIELDS = {'primaries':'color_primaries', 'transfer':'color_transfer',
                 'matrix':'color_space', 'range':'color_range'}
@@ -524,7 +524,9 @@ def geometry(ref, enc, crop_ref, crop_enc=None):
         raise RuntimeError(f'Aktive Bildausschnitte passen nicht: Referenz {r[0]}x{r[1]} bei {r[2]}:{r[3]} (AR {r[0]/r[1]:.4f}), Encode {e[0]}x{e[1]} bei {e[2]}:{e[3]} (AR {e[0]/e[1]:.4f}). Auto-Erkennung unten/oben im Protokoll pruefen; bei Bedarf --crop/--crop-encode manuell setzen. Es wird nicht gestreckt.')
     return {'ref': r, 'enc': e, 'target': e[:2],
             'ref_color_filter':color_filter(ref), 'enc_color_filter':color_filter(enc),
-            'ref_kind': classify(ref), 'enc_kind': classify(enc)}
+            'ref_kind': classify(ref), 'enc_kind': classify(enc),
+            'ref_source': {k:ref.get(k) for k in ('width','height','pix_fmt','codec_name')},
+            'enc_source': {k:enc.get(k) for k in ('width','height','pix_fmt','codec_name')}}
 
 
 def normalization(kind):
@@ -681,18 +683,21 @@ def graph(fps, step, threads, hdr, limit=None, crop=None, display='1080'):
 def evaluate(ffmpeg, ref, enc, fps, step, threads, hdr, root, log, limit=None, crop=None, display='1080', frame_count=None, optimize=True):
     if hdr:
         if not isinstance(crop,dict):raise RuntimeError('HDR-Messung erfordert die aufgeloeste Bildgeometrie.')
-        width,height=crop['target'];commands=[]
+        width,height=crop['target'];commands=[];decoder_envs=[];renderer_audit=[]
         plan=vmaf_hdr.sparse_plan(root/'model.json',step,limit or frame_count) if optimize else None
         if plan and not limit:
             print('HDR-25%-Optimierung: Referenz mit direkten Nachbarbildern; Encode nur bewertete Bilder. Vollstaendige Decoder-Framezaehlung bleibt aktiv.',flush=True)
         for index,(path,key) in enumerate(((ref,'ref'),(enc,'enc'))):
             trim=f'trim=end_frame={limit},' if limit else ''
             filters=crop.get(key+'_color_filter','')
-            filters+=normalization(crop[key+'_kind'])
+            backend=vmaf_dv.decoder(path,crop.get(key+'_source',{}),crop[key],crop.get('dv_renderer','optimized')) if crop[key+'_kind']=='dv' else None
+            filters+=backend[1] if backend else normalization(crop[key+'_kind'])
+            decoder_envs.append(backend[2] if backend else None)
+            renderer_audit.append(backend[3] if backend else {'mode':'classic','kind':crop[key+'_kind']})
             filters+='crop='+':'.join(map(str,crop[key]))+','
             filters+=f'scale={width}:{height}:flags=bicubic,setsar=1,'
             filters+='zscale=p=bt2020:t=smpte2084:m=bt2020nc:r=limited,format=yuv420p16le'
-            command=[ffmpeg,'-hide_banner','-nostdin','-xerror','-v','warning',
+            command=[backend[0] if backend else ffmpeg,'-hide_banner','-nostdin','-xerror','-v','warning',
                 *dv_device_args(crop[key+'_kind']),'-i',str(path)]
             if plan:
                 select=plan['reference_select' if index==0 else 'encoded_select']
@@ -705,7 +710,10 @@ def evaluate(ffmpeg, ref, enc, fps, step, threads, hdr, root, log, limit=None, c
             else:command+=['-map','0:V:0','-vf',trim+filters]
             command+=['-an','-sn','-dn','-fps_mode','passthrough','-pix_fmt','yuv420p16le','-f','rawvideo','pipe:1']
             commands.append(command)
-        return vmaf_hdr.evaluate(commands,width,height,threads,step,root,log,not limit,plan)
+        crop['renderer_audit']=renderer_audit
+        if not limit and any(x['mode']=='optimized-cpu-dv-v1' for x in renderer_audit):
+            print('DV-Optimierung: P010/P016, Crop-ROI und begrenzter Farb-Schnellpfad; kleine Abweichungen zum klassischen Ablauf moeglich.',flush=True)
+        return vmaf_hdr.evaluate(commands,width,height,threads,step,root,log,not limit,plan,decoder_envs)
     cmd = [ffmpeg, '-hide_banner', '-nostdin', '-xerror', '-v', 'warning', '-i', str(enc), '-i', str(ref),
            '-filter_complex', graph(fps, step, threads, hdr, limit, crop, display),
            '-map', '[out]', '-an', '-sn', '-dn', '-f', 'null', '-']
@@ -798,6 +806,7 @@ def main():
     ap.add_argument('--ffprobe', help='Pfad zu FFprobe')
     ap.add_argument('--dovi-tool', help='Optionaler lokaler Pfad; sonst automatischer Download bei P7-Konvertierung')
     ap.add_argument('--mkvmerge', help='Optionaler MKVToolNix-Pfad fuer P7; sonst automatischer Download')
+    ap.add_argument('--dv-renderer', choices=('optimized','classic'), default='optimized', help='DV: optimierter CPU-Ablauf (Standard) oder klassische Farbberechnung')
     ap.add_argument('--vulkan-icd', help='Optionaler Pfad zum Mesa-Lavapipe-ICD fuer CPU-Dolby-Vision')
     ap.add_argument('--dv-mode', choices=('auto','compatible','rendered','base-layer'), default='auto',
                     help='auto: P7 als Kompatibilitaetsvergleich, sonst rendered; base-layer: gemeinsame HDR10-Basis')
@@ -934,6 +943,7 @@ def main():
             crop_info['encode_detection'] = enc_crop_info
             print('Auto-Crop Encode:',crop_enc or 'kein sicherer Ausschnitt',enc_crop_info.get('reason',''),flush=True)
         crop = geometry(info_ref,info_enc,crop,crop_enc)
+        crop['dv_renderer']=args.dv_renderer
         crop_info['alignment'] = crop
         print('Referenz-Crop:', crop['ref'], 'Encode-Crop:', crop['enc'], 'Pruefraster:', crop['target'], 'Modell:', args.display, flush=True)
         if args.model:

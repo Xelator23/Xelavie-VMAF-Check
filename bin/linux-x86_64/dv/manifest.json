@@ -1,0 +1,9 @@
+{
+  "executable": "xelavie-dv-render",
+  "sha256": {
+    "libdav1d.so.7": "314d53716c5f74d39dcfcfe29e341671ad25bf43022a218e54d019c35ce5222c",
+    "roi.json": "e356d68e997d89fa2b668d6419301ffb546b705860f7c19743dcd3d996c69f6d",
+    "xelavie-dv-render": "118d4f76edd46b27e34f9d32f14a36f4f1ca8489faef44985713e6981fad167f",
+    "xelavie-roi.so": "72b1b09b98df127a37c5b463139e7c0ca0a86699bc3e27ab9fd2007730c0fd1f"
+  }
+}

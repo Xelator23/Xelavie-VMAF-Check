@@ -1,0 +1,18 @@
+[
+  [
+    "    if (!args->prelinearized)\n        pl_shader_linearize(sh, &src);",
+    "\n    // Experimental guarded bypass: retain the complete original math for\n    // saturated or out-of-domain pixels. All other parameter combinations\n    // retain the original path as well. No defaults are changed.\n    const char *fast_env = getenv(\"XELAVIE_GUARDED_MAP\");\n    bool xfast = fast_env && !args->prelinearized &&\n        src.primaries == PL_COLOR_PRIM_BT_2020 && dst.primaries == src.primaries &&\n        src.transfer == PL_COLOR_TRC_PQ && dst.transfer == src.transfer &&\n        tone.function == &pl_tone_map_clip && can_fast &&\n        (!need_gamut_map || gamut.function == &pl_gamut_map_perceptual) &&\n        dt_exposure == 1.0f &&\n        tone.input_max == 1.0f && tone.output_max == 1.0f &&\n        tone.input_min <= 0.02f && tone.output_min == 0.0f &&\n        (!obj || obj->peak.max_y_pq == 0.0f) &&\n        !params->show_clipping && !params->visualize_lut &&\n        !(params->contrast_recovery && args->feature_map);\n    if (xfast) {\n        float threshold = PL_CLAMP(strtof(fast_env, NULL), 0.0f, 0.25f);\n        sh_describe(sh, \"guarded PQ bypass with original fallback\");\n        GLSL(\"if (any(lessThan(color.rgb, vec3(0.0))) || \"\n             \"any(greaterThan(color.rgb, vec3(1.0))) || \"\n             \"max(color.r,max(color.g,color.b))-min(color.r,min(color.g,color.b)) > \"$\" \"\n             \"|| max(color.r,max(color.g,color.b)) < 0.02) {\\n\", SH_FLOAT(threshold));\n    }\n    if (!args->prelinearized)\n        pl_shader_linearize(sh, &src);"
+  ],
+  [
+    "done:\n    pl_shader_delinearize(sh, &dst);",
+    "done:\n    pl_shader_delinearize(sh, &dst);\n    if (xfast) GLSL(\"}\\n\");"
+  ],
+  [
+    "    if (need_tone_map) {\n        const struct pl_tone_map_function *fun",
+    "    if (need_tone_map && !getenv(\"XELAVIE_SKIP_TONE_BODY\")) {\n        const struct pl_tone_map_function *fun"
+  ],
+  [
+    "    // Convert IPT back to linear RGB\n",
+    "    if (getenv(\"XELAVIE_SKIP_FINAL_IPT\") && !need_gamut_map) goto done;\n\n    // Convert IPT back to linear RGB\n"
+  ]
+]

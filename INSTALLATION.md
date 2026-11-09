@@ -23,7 +23,7 @@ uv tool install git+https://github.com/Xelator23/Xelavie-VMAF-Check.git
 Ohne Versionszusatz wird der aktuelle Entwicklungsstand installiert. Für die konkret veröffentlichte Nightly stattdessen:
 
 ```sh
-uv tool install "git+https://github.com/Xelator23/Xelavie-VMAF-Check.git@v0.1.0-nightly.9"
+uv tool install "git+https://github.com/Xelator23/Xelavie-VMAF-Check.git@v0.1.0-nightly.10"
 ```
 
 uv richtet eine eigene Python-Umgebung ein und kann bei Bedarf eine passende Python-Version beschaffen. Falls der Startbefehl nicht gefunden wird: `uv tool update-shell` ausführen und das Terminal neu öffnen. Die CLI erhält Original und Encode als Argumente, Einstellungen als Flags. Ohne Argumente wird die Hilfe angezeigt. Die Browser-Oberfläche startet ausschließlich mit `xelavie-vmaf-check --gui`.
@@ -64,13 +64,13 @@ Die folgenden Download- und Prüfsummenschritte gelten für die Release-Pakete. 
 
 ### 1. Dateien herunterladen
 
-Öffne [Release 0.1.0-nightly.9](https://github.com/Xelator23/Xelavie-VMAF-Check/releases/tag/v0.1.0-nightly.9) und lade `SHA256SUMS.txt` sowie eines dieser Pakete in einen neuen, leeren Ordner:
+Öffne [Release 0.1.0-nightly.10](https://github.com/Xelator23/Xelavie-VMAF-Check/releases/tag/v0.1.0-nightly.10) und lade `SHA256SUMS.txt` sowie eines dieser Pakete in einen neuen, leeren Ordner:
 
 | Variante | Datei |
 | --- | --- |
-| Windows portable | `Xelavie-VMAF-Check-0.1.0-nightly.9-Windows.zip` |
-| Linux portable | `Xelavie-VMAF-Check-0.1.0-nightly.9-Linux.tar.gz` |
-| uv für Windows und Linux | `xelavie_vmaf_check-0.1.0.dev9-py3-none-any.whl` |
+| Windows portable | `Xelavie-VMAF-Check-0.1.0-nightly.10-Windows.zip` |
+| Linux portable | `Xelavie-VMAF-Check-0.1.0-nightly.10-Linux.tar.gz` |
+| uv für Windows und Linux | `xelavie_vmaf_check-0.1.0.dev10-py3-none-any.whl` |
 
 Die automatisch von GitHub angebotenen „Source code“-Archive sind andere Dateien. Diese Anleitung verwendet die ausdrücklich aufgeführten Release-Pakete. Es wird kein heruntergeladener Skripttext direkt an eine Shell weitergereicht.
 
@@ -81,7 +81,7 @@ Die automatisch von GitHub angebotenen „Source code“-Archive sind andere Dat
 Setze `$package` auf genau die heruntergeladene Datei (ZIP oder Wheel):
 
 ```powershell
-$package = 'Xelavie-VMAF-Check-0.1.0-nightly.9-Windows.zip'
+$package = 'Xelavie-VMAF-Check-0.1.0-nightly.10-Windows.zip'
 $entries = @(Get-Content -LiteralPath '.\SHA256SUMS.txt' | Where-Object { $_ -match ('^[0-9a-f]{64}  ' + [regex]::Escape($package) + '$') })
 if ($entries.Count -ne 1) { throw 'Keine eindeutige SHA256 für dieses Paket.' }
 $expected = $entries[0].Substring(0,64)
@@ -97,7 +97,7 @@ Setze `package` auf die heruntergeladene Datei (TAR.GZ oder Wheel):
 ```sh
 (
   set -eu
-  package='Xelavie-VMAF-Check-0.1.0-nightly.9-Linux.tar.gz'
+  package='Xelavie-VMAF-Check-0.1.0-nightly.10-Linux.tar.gz'
   expected=$(awk -v file="$package" '$2 == file {print $1}' SHA256SUMS.txt)
   [ "${#expected}" -eq 64 ] || { echo 'Keine eindeutige SHA256 für dieses Paket.' >&2; exit 1; }
   printf '%s  %s\n' "$expected" "$package" | sha256sum --check -
@@ -111,14 +111,14 @@ Setze `package` auf die heruntergeladene Datei (TAR.GZ oder Wheel):
 Windows:
 
 ```powershell
-Expand-Archive -LiteralPath '.\Xelavie-VMAF-Check-0.1.0-nightly.9-Windows.zip' -DestinationPath '.\geprueft'
+Expand-Archive -LiteralPath '.\Xelavie-VMAF-Check-0.1.0-nightly.10-Windows.zip' -DestinationPath '.\geprueft'
 .\geprueft\Xelavie-VMAF-Check\vmaf-check.cmd
 ```
 
 Linux:
 
 ```sh
-mkdir geprueft && tar -xzf Xelavie-VMAF-Check-0.1.0-nightly.9-Linux.tar.gz -C geprueft && sh ./geprueft/Xelavie-VMAF-Check/vmaf-check.sh
+mkdir geprueft && tar -xzf Xelavie-VMAF-Check-0.1.0-nightly.10-Linux.tar.gz -C geprueft && sh ./geprueft/Xelavie-VMAF-Check/vmaf-check.sh
 ```
 
 Fehlt Python, darf nur vorhandenes uv Python beschaffen. Fehlen beide Voraussetzungen, zeigt der Starter einen Hinweis und beendet sich.
@@ -128,13 +128,13 @@ Fehlt Python, darf nur vorhandenes uv Python beschaffen. Fehlen beide Voraussetz
 Nach erfolgreicher Prüfung des **Wheels** unter Windows oder Linux:
 
 ```sh
-uv tool install --python 3.12 ./xelavie_vmaf_check-0.1.0.dev9-py3-none-any.whl
+uv tool install --python 3.12 ./xelavie_vmaf_check-0.1.0.dev10-py3-none-any.whl
 xelavie-vmaf-check
 ```
 
 Ohne Argumente erscheint die CLI-Hilfe. Einen Vergleich startest du mit `xelavie-vmaf-check "Original.mkv" "Encode.mkv" --percent 25`; die Browser-Oberfläche mit `xelavie-vmaf-check --gui`. Falls der Befehl nicht gefunden wird, `uv tool update-shell` ausführen und ein neues Terminal öffnen.
 
-Die Python-Paketversion `0.1.0.dev9` entspricht `0.1.0-nightly.9`. Es gibt aktuell **keine Veröffentlichung auf PyPI**. Bei dieser optionalen Variante wird der Pfad zur Wheel-Datei verwendet; alternativ ist die direkte GitHub-Installation oben möglich.
+Die Python-Paketversion `0.1.0.dev10` entspricht `0.1.0-nightly.10`. Es gibt aktuell **keine Veröffentlichung auf PyPI**. Bei dieser optionalen Variante wird der Pfad zur Wheel-Datei verwendet; alternativ ist die direkte GitHub-Installation oben möglich.
 
 ### Updates der Downloadpakete und Deinstallation
 
