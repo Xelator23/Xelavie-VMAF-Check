@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0-nightly.11
+
+- Der CPU-Renderer erkennt Dolby-Vision-Kurven, die ihre Eingangswerte unverändert ausgeben. Bei unmittelbar aufeinanderfolgenden identischen Bildern und identischen Farb- und DV-Metadaten kann er das gerenderte Bild wiederverwenden. VMAF bewertet weiterhin jedes für den gewählten Prüfanteil vorgesehene Bild.
+- Die automatische Balkenerkennung speichert bestätigte DV-Ausschnitte pro Spur unter `Cache/Crop` im Arbeitsordner. Eine Inhaltsprüfung bestätigt den Treffer beim nächsten Lauf. Unter Windows können Referenz und Encode bei ausreichendem Arbeitsspeicher und CPU-Kernen gleichzeitig untersucht werden.
+- Die P7-Vorbereitung kann die Prüfsumme beim Lesen der Videodaten bilden. Bereits geladene, per Prüfsumme bestätigte Werkzeugpakete können aus dem Arbeitsordner wiederverwendet werden.
+- Im Vergleich zum vorherigen privaten Teststand sank die Gesamtzeit am 60,14-s-Filmstart bei 100 % und gespeichertem Crop unter Windows um 5,4 % und auf dem Ubuntu-Builder mit acht vCPU um 6,9 %. Alle 1.442 Einzelbildwerte stimmen auf der jeweiligen Plattform überein. Bei einer bewegten Szene waren die Laufzeiten nahezu gleich. [Messungen und Testbedingungen](docs/DV-NIGHTLY-11.md)
+
 ## 0.1.0-nightly.10
 
 - Integrierter CPU-DV-Renderer für 10-Bit-4:2:0-MKV mit HEVC/AV1 unter Windows x64 und Linux x86_64: P010-Eingang, direkter P016-Transport, gemeinsame Chroma-Verarbeitung und Crop-ROI mit Randbereich.

@@ -25,10 +25,14 @@ class RendererTests(unittest.TestCase):
             self.assertNotIn('XELAVIE_NEUTRAL_TARGET',env)
             self.assertNotIn('XELAVIE_SKIP_TONE_BODY',env)
             self.assertEqual(env['XELAVIE_GUARDED_MAP'],'0.15')
-            self.assertEqual(env['XELAVIE_ROI'],'3840:2160:0:276:3840:1608:32')
+            self.assertEqual(env['XELAVIE_ROI'],'3840:1736:0:64:3840:1608:32')
             self.assertIn('format=p010le,libplacebo=',filters)
             self.assertNotIn('format=yuv420p16le',filters)
             self.assertFalse(audit['bit_identical_to_classic'])
+            self.assertEqual(env['XELAVIE_NEAREST_TAPS'],'down')
+            self.assertEqual(audit['output_crop'],(3840,1608,0,64))
+            self.assertEqual(audit['pre_crop'],(3840,1736,0,212))
+            self.assertIn('crop=3840:1736:0:212,format=p010le,',filters)
 
     def test_corrupt_bundle_is_not_silently_used(self):
         with tempfile.TemporaryDirectory() as d,patch.object(dv,'bundle_path',return_value=Path(d)):

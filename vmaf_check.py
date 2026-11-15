@@ -14,13 +14,17 @@ import signal
 import ssl
 import subprocess
 import sys
+import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 if __package__:
     from .vmaf_settings import work_directory, save_work_directory
+    from .vmaf_library import atomic_json
     from . import vmaf_dv, vmaf_hdr
 else:
     from vmaf_settings import work_directory, save_work_directory
+    from vmaf_library import atomic_json
     import vmaf_dv, vmaf_hdr
 import tarfile
 import tempfile
@@ -29,7 +33,7 @@ import urllib.error
 import zipfile
 from fractions import Fraction
 
-__version__ = '0.1.0-nightly.10'
+__version__ = '0.1.0-nightly.11'
 
 COLOR_FIELDS = {'primaries':'color_primaries', 'transfer':'color_transfer',
                 'matrix':'color_space', 'range':'color_range'}
@@ -138,6 +142,44 @@ def fetch(url, path=None):
         raise RuntimeError('HTTPS-Zertifikatskette nicht vertrauenswuerdig. System-CA/Proxy pruefen oder VMAF_CA_BUNDLE auf eine vertrauenswuerdige PEM-CA-Datei setzen. Zertifikatspruefung bleibt aktiv.') from exc
 
 
+DOWNLOAD_CACHE = None
+
+
+def verified_fetch(url, path, expected, refresh=False):
+    """Reuse only content verified against a current trusted SHA256 digest."""
+    if not isinstance(expected,str) or not re.fullmatch(r'[0-9a-f]{64}',expected):
+        raise RuntimeError('Download-SHA256 fehlt oder ist ungueltig.')
+    if not url.startswith('https://'):raise ValueError('Downloads erfordern HTTPS.')
+    cached = Path(DOWNLOAD_CACHE)/expected if DOWNLOAD_CACHE is not None else None
+    if cached is not None and not refresh and cached.is_file():
+        try:
+            shutil.copyfile(cached,path)
+            if file_sha256(path)==expected:
+                print('Verifizierter Download-Cache: '+Path(path).name,flush=True)
+                return expected
+            print('Download-Cache beschaedigt; lade Paket erneut.',flush=True)
+        except OSError:
+            pass  # Cache is optional; a verified download remains available.
+    actual=fetch(url,path)
+    if actual!=expected:
+        raise RuntimeError('Download-SHA256 stimmt nicht.')
+    if cached is not None:
+        temporary=None
+        try:
+            cached.parent.mkdir(parents=True,exist_ok=True)
+            fd,name=tempfile.mkstemp(prefix='.download-',dir=cached.parent)
+            os.close(fd);temporary=Path(name)
+            shutil.copyfile(path,temporary)
+            os.replace(temporary,cached)
+        except OSError as exc:
+            print('Download-Cache konnte nicht gespeichert werden: '+str(exc),flush=True)
+        finally:
+            if temporary is not None:
+                try:temporary.unlink(missing_ok=True)
+                except OSError:pass
+    return actual
+
+
 def unpack(archive, destination):
     """Extract regular files only, never links or paths outside destination."""
     destination = Path(destination).resolve()
@@ -168,7 +210,7 @@ def unpack(archive, destination):
                     shutil.copyfileobj(src, dst)
 
 
-def download_tools(root, manifest):
+def download_tools(root, manifest, refresh=False):
     machine = platform.machine().lower()
     arch = '64' if machine in ('amd64', 'x86_64') else 'arm64' if machine in ('arm64', 'aarch64') else None
     system = platform.system()
@@ -186,8 +228,8 @@ def download_tools(root, manifest):
                            'https://github.com/FFmpeg-Builds/FFmpeg-Builds/releases/download/')):
         raise RuntimeError('Unerwartete Download-Quelle.')
     archive = root / name
-    sha = fetch(url, archive)
     digest = asset.get('digest')
+    sha = verified_fetch(url,archive,digest[7:] if isinstance(digest,str) and digest.startswith('sha256:') else None,refresh)
     if not digest or digest != 'sha256:' + sha:
         raise RuntimeError('SHA256 fehlt in der Release-API oder stimmt nicht ueberein.')
     manifest.append({'url': url, 'sha256': sha, 'verified_release_digest': True,'component':'ffmpeg'})
@@ -306,7 +348,8 @@ def download_dovi(root, manifest):
     if not url.startswith('https://github.com/quietvoid/dovi_tool/releases/download/'):
         raise RuntimeError('Unerwartete dovi_tool-Downloadquelle.')
     archive = root / asset['name']
-    sha = fetch(url,archive)
+    digest=asset.get('digest')
+    sha = verified_fetch(url,archive,digest[7:] if isinstance(digest,str) and digest.startswith('sha256:') else None)
     if asset.get('digest') != 'sha256:'+sha:
         raise RuntimeError('dovi_tool SHA256 fehlt oder stimmt nicht.')
     manifest.append({'url':url,'sha256':sha,'verified_release_digest':True})
@@ -327,7 +370,7 @@ def download_mkvmerge(root, manifest):
               'c66345b30d6d5fd640ea982ab5e202a99b9f541a20e42aa19edd90f3ddd5dc9b')
     archive=root/('mkvtoolnix.zip' if windows else 'mkvmerge.AppImage')
     print('Lade temporaeres MKVToolNix-Paket fuer P7 ...',flush=True)
-    if fetch(url,archive)!=expected:raise RuntimeError('MKVToolNix SHA256 stimmt nicht.')
+    if verified_fetch(url,archive,expected)!=expected:raise RuntimeError('MKVToolNix SHA256 stimmt nicht.')
     manifest.append({'url':url,'sha256':expected,'verified_pinned_digest':True})
     dest=root/'mkvtoolnix';dest.mkdir(exist_ok=True)
     if windows:
@@ -362,7 +405,7 @@ def configure_cpu_vulkan(ffmpeg, root, manifest, no_download=False, icd=None):
         url='https://github.com/mmozeiko/build-mesa/releases/download/26.2.6/mesa-lavapipe-x64-26.2.6.7z'
         expected='4ed980046a8d42de4efa74085f00e238a51c774b854d63ecece6dfee59ab3bf3'
         print('Lade temporaeres CPU-Vulkan-Paket ...',flush=True)
-        if fetch(url,archive)!=expected:raise RuntimeError('Lavapipe SHA256 stimmt nicht.')
+        if verified_fetch(url,archive,expected)!=expected:raise RuntimeError('Lavapipe SHA256 stimmt nicht.')
         manifest.append({'url':url,'sha256':expected,'verified_pinned_digest':True})
         tar=shutil.which('tar.exe')
         if not tar:raise RuntimeError('Windows tar.exe fehlt; lokalen Lavapipe-Treiber mit --vulkan-icd angeben.')
@@ -405,11 +448,12 @@ def logged(cmd, log):
     if code: raise RuntimeError('Vorbereitung fehlgeschlagen: '+str(log)+'\n'+Path(log).read_text(encoding='utf-8',errors='replace')[-3000:])
 
 
-def prepare_dv(ffmpeg, ffprobe, path, stream, mode, dovi, root, output, name, fps, mkvmerge=None):
+def prepare_dv(ffmpeg, ffprobe, path, stream, mode, dovi, root, output, name, fps, mkvmerge=None, fingerprint=False):
     c = dv_config(stream)
     if not c or (c['dv_profile'] != 7 and mode != 'base-layer'):
         return path, stream, None
     result = root / (name+'-prepared.mkv')
+    video_hash = None
     # No shell pipelines: separate argument lists and binary stdout handles.
     if mode == 'compatible':
         if not mkvmerge: raise RuntimeError('P7-Vorbereitung benoetigt MKVToolNix/mkvmerge.')
@@ -421,15 +465,30 @@ def prepare_dv(ffmpeg, ffprobe, path, stream, mode, dovi, root, output, name, fp
             producer = subprocess.Popen(decode,stdout=subprocess.PIPE,stderr=err)
             consumer = None
             try:
-                consumer = subprocess.Popen(convert,stdin=producer.stdout,stdout=log,stderr=subprocess.STDOUT)
-                producer.stdout.close()
+                consumer = subprocess.Popen(convert,stdin=subprocess.PIPE if fingerprint else producer.stdout,
+                                            stdout=log,stderr=subprocess.STDOUT)
+                if fingerprint:
+                    # Hash the exact Annex B data already required by dovi_tool.
+                    # A large P7 remux needs no second read from disk or SMB.
+                    digest = hashlib.sha256()
+                    with producer.stdout as source, consumer.stdin as target:
+                        for chunk in iter(lambda: source.read(256*1024), b''):
+                            target.write(chunk)
+                            digest.update(chunk)
+                    video_hash = digest.hexdigest()
+                else:
+                    producer.stdout.close()
                 converted = consumer.wait()
                 extracted = producer.wait()
                 if converted or extracted:
                     raise RuntimeError('P7->P8.1 Vorbereitung fehlgeschlagen; siehe '+str(output))
+            except BrokenPipeError as exc:
+                raise RuntimeError('P7->P8.1 Vorbereitung fehlgeschlagen; siehe '+str(output)) from exc
             finally:
                 for p in (consumer,producer):
                     if p and p.poll() is None: p.kill(); p.wait()
+                if producer.stdout and not producer.stdout.closed:
+                    producer.stdout.close()
         # Raw HEVC has no container timestamps. mkvmerge generates CFR timestamps
         # from the original rational rate and preserves the DOVI configuration.
         with open(output/(name+'-remux.log'),'w',encoding='utf-8') as logfile:
@@ -453,8 +512,11 @@ def prepare_dv(ffmpeg, ffprobe, path, stream, mode, dovi, root, output, name, fp
         raise RuntimeError('Basisschicht-Vorbereitung enthaelt noch DV-Signalisierung.')
     if (stream['width'],stream['height']) != (info['width'],info['height']):
         raise RuntimeError('Vorbereitung hat die Bildabmessungen veraendert.')
-    return result,info,{'operation': 'p7_to_p81_discard_el' if mode == 'compatible' else 'strip_dv_and_el',
-                       'original':str(path),'prepared':str(result),'reencoded':False}
+    audit = {'operation': 'p7_to_p81_discard_el' if mode == 'compatible' else 'strip_dv_and_el',
+             'original':str(path),'prepared':str(result),'reencoded':False}
+    if video_hash:
+        audit['annexb_sha256'] = video_hash
+    return result,info,audit
 
 
 def classify(s):
@@ -529,7 +591,7 @@ def geometry(ref, enc, crop_ref, crop_enc=None):
             'enc_source': {k:enc.get(k) for k in ('width','height','pix_fmt','codec_name')}}
 
 
-def normalization(kind):
+def normalization(kind, dv_format='yuv420p16le'):
     if kind == 'dv7':
         raise RuntimeError('Profil 7 muss vor der Bewertung explizit vorbereitet werden.')
     if kind == 'hlg':
@@ -540,7 +602,7 @@ def normalization(kind):
     if kind == 'dv':
         return ('libplacebo=apply_dolbyvision=1:colorspace=bt2020nc:'
                 'color_primaries=bt2020:color_trc=smpte2084:range=tv:'
-                'format=yuv420p16le:peak_detect=0:tonemapping=clip:dithering=none,')
+                f'format={dv_format}:peak_detect=0:tonemapping=clip:dithering=none,')
     return ''
 
 
@@ -583,7 +645,144 @@ def count_frames(exe, path):
     return int(d['streams'][0]['nb_read_frames'])
 
 
-def detect_crop(ffmpeg, ffprobe, ref, stream):
+def crop_digest(value):
+    data = json.dumps(value, sort_keys=True, separators=(',', ':'), allow_nan=False)
+    return hashlib.sha256(data.encode('utf-8')).hexdigest()
+
+
+def crop_source_stamp(path):
+    stat = path.stat()
+    return stat.st_dev, stat.st_ino, stat.st_size, stat.st_mtime_ns, stat.st_ctime_ns
+
+
+def crop_source_hash(path, finished):
+    digest = hashlib.sha256()
+    with path.open('rb') as media:
+        while not finished.is_set():
+            block = media.read(2 * 1024 * 1024)
+            if not block:
+                return digest.hexdigest()
+            digest.update(block)
+    return None
+
+
+class DVCropCache:
+    """Store only successfully detected geometry. A hit requires identical input bytes."""
+
+    def __init__(self, directory, ffmpeg, ffprobe, renderer, probe_log, scratch=None):
+        self.directory = directory
+        self.scratch = scratch
+        self.parallel = False
+        self.tools = (ffmpeg, ffprobe)
+        self.digests = {}
+        self.tool_lock = threading.Lock()
+        device = [line.split('] ', 1)[-1].strip() for line in probe_log.splitlines()
+                  if any(tag in line for tag in ('Device Name:', 'Device UUID:', 'Driver version:', 'API version:'))]
+        self.context = {
+            'algorithm': 'dv-crop-v2', 'host': platform.node(), 'platform': platform.platform(),
+            'cpu': platform.processor(), 'renderer': renderer.get('libplacebo_version'),
+            'device': device,
+            'settings': {k: val for k, val in os.environ.items() if k.startswith(
+                ('LP_', 'MESA_', 'GALLIUM_', 'GALLIVM_', 'VK_LAYER', 'VK_INSTANCE_LAYERS', 'LLVM_', 'LD_'))},
+        }
+
+    def detect(self, original, initial_stamp, prepared, stream, conversion, converters):
+        ffmpeg, ffprobe = self.tools
+        def scan():
+            if not self.parallel or self.scratch is None:
+                return detect_crop(ffmpeg, ffprobe, prepared, stream, self.scratch)
+            # Separate compiler caches when both videos are processed at once.
+            with tempfile.TemporaryDirectory(prefix='crop-', dir=self.scratch) as folder:
+                return detect_crop(ffmpeg, ffprobe, prepared, stream, folder)
+
+        if initial_stamp is None:
+            return scan()
+        try:
+            current_stamp = crop_source_stamp(original)
+        except OSError:
+            return scan()
+        if current_stamp != initial_stamp:
+            return scan()
+        supplied_hash = (conversion or {}).get('annexb_sha256')
+        try:
+            self.directory.mkdir(parents=True, exist_ok=True)
+            tools = list(self.tools) + ([t for t in converters if t] if conversion else [])
+            with self.tool_lock:
+                for tool in tools:
+                    if tool not in self.digests:
+                        self.digests[tool] = file_sha256(tool)
+            fields = ('width', 'height', 'pix_fmt', 'codec_name', 'color_primaries', 'color_transfer',
+                      'color_space', 'color_range', 'duration', 'r_frame_rate', 'avg_frame_rate',
+                      'side_data_list', '_color_overrides')
+            key = crop_digest([self.context, [self.digests[t] for t in tools], str(original),
+                               initial_stamp, (conversion or {}).get('operation'),
+                               'annexb' if supplied_hash else 'file', {k: stream.get(k) for k in fields}])
+            location = self.directory / (key + '.json')
+        except OSError:
+            return scan()
+
+        entry = None
+        try:
+            if location.stat().st_size <= 32768:
+                record = json.loads(location.read_bytes())
+                payload = record['payload']
+                if (payload['key'] == key and crop_digest(payload) == record['checksum']
+                        and isinstance(payload.get('source_sha256'), str)
+                        and re.fullmatch(r'[0-9a-f]{64}', payload['source_sha256'])):
+                    rectangle = parse_crop(':'.join(map(str, payload['info']['rectangle'])), stream['width'], stream['height'])
+                    samples = payload['info']['samples']
+                    if isinstance(samples, list) and len(samples) >= 3:
+                        entry = payload
+        except (OSError, ValueError, TypeError, KeyError, RuntimeError, AttributeError, OverflowError):
+            pass
+
+        finished = threading.Event()
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            future = None if supplied_hash else pool.submit(crop_source_hash, original, finished)
+            try:
+                if entry is not None:
+                    try:
+                        fingerprint = supplied_hash or future.result()
+                        if fingerprint == entry['source_sha256'] and crop_source_stamp(original) == initial_stamp:
+                            print('Auto-Crop aus verifiziertem Cache:', original.name, flush=True)
+                            return rectangle, entry['info']
+                    except OSError:
+                        pass
+                result = scan()
+            finally:
+                # On a cold scan of a large file, never wait for a second full-film read.
+                finished.set()
+            try:
+                fingerprint = supplied_hash or future.result()
+                if result[0] is None or not fingerprint or crop_source_stamp(original) != initial_stamp:
+                    return result
+                payload = {'key': key, 'source_sha256': fingerprint, 'info': result[1]}
+                atomic_json(location, {'payload': payload, 'checksum': crop_digest(payload)})
+            except OSError:
+                pass
+        return result
+
+
+def parallel_dv_crops(ref, enc):
+    if (os.name != 'nt' or (getattr(os, 'process_cpu_count', os.cpu_count)() or 1) < 16
+            or os.environ.get('LP_NUM_THREADS') or max(ref['width'], enc['width']) > 4096):
+        return False
+    # MEMORYSTATUSEX starts with two DWORDs followed by seven DWORDLONGs.
+    import ctypes
+    class MemoryStatus(ctypes.Structure):
+        _fields_ = [('size', ctypes.c_uint32), ('load', ctypes.c_uint32),
+                    ('total', ctypes.c_uint64), ('available', ctypes.c_uint64),
+                    ('remaining', ctypes.c_uint64 * 5)]
+    status = MemoryStatus()
+    status.size = ctypes.sizeof(status)
+    if not ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(status)):
+        return False
+    # Two 10-bit decoders plus Mesa's textures must fit without paging.
+    pixels = ref['width']*ref['height'] + enc['width']*enc['height']
+    return status.available >= max(4*1024**3, 512*pixels)
+
+
+def detect_crop(ffmpeg, ffprobe, ref, stream, scratch=None):
     width, height = stream['width'], stream['height']
     # cropdetect compares code values, not black-relative brightness. Limited
     # black is 16/255 (8 bit), so 0.06 incorrectly treats black bars as content.
@@ -598,6 +797,16 @@ def detect_crop(ffmpeg, ffprobe, ref, stream):
                               'default=noprint_wrappers=1:nokey=1', ref]).strip())
     if not math.isfinite(duration) or duration < 1:
         return None, {'reason': 'Keine verlaessliche Dauer; kein Auto-Crop.'}
+    kind = classify(stream)
+    shader_cache = scratch is not None and kind == 'dv'
+    if shader_cache:
+        ffmpeg = str(Path(shutil.which(ffmpeg) or ffmpeg).resolve())
+        ref = ref.resolve()
+    # cropdetect reads Y. Retaining full-resolution chroma here avoids Mesa's
+    # chroma reduction passes and preserves the limited-range 16-bit PQ luma.
+    formats = (['p416le', 'yuv444p16le', 'yuv420p16le']
+               if kind == 'dv' and stream.get('pix_fmt') == 'yuv420p10le'
+               else ['yuv420p16le'])
     rects = []
     samples = []
     skipped = []
@@ -608,10 +817,35 @@ def detect_crop(ffmpeg, ffprobe, ref, stream):
         start = max(0, min(duration * part, duration - 1))
         cmd = [ffmpeg, '-hide_banner', '-nostdin', '-v', 'info', *dv_device_args(classify(stream)), '-ss', str(start), '-i', str(ref),
                '-t', str(min(3, duration-start)), '-map', '0:V:0', '-an', '-sn',
-               '-vf', color_filter(stream) + normalization(classify(stream)) + f'cropdetect=limit={black_limit:.9f}:round=2:reset=0', '-f', 'null', '-']
-        p = subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8', errors='replace')
-        if p.returncode:
-            raise RuntimeError('Crop-Erkennung fehlgeschlagen: ' + p.stderr[-2000:])
+               '-vf']
+        while True:
+            fmt = formats[0]
+            vf = color_filter(stream) + normalization(kind, fmt)
+            if shader_cache:
+                # All windows in this job share the already compiled Mesa shaders.
+                # A fixed relative prefix also works with quotes/colons in user paths.
+                vf = vf[:-1] + ':shader_cache=crop-shader-,'
+            # P416 renders the same 16-bit Y plane and writes U/V together.
+            # Explicitly unpack before cropdetect to retain detection precision.
+            if fmt == 'p416le':
+                vf += 'format=yuv444p16le,'
+            vf += f'cropdetect=limit={black_limit:.9f}:round=2:reset=0'
+            p = subprocess.run([*cmd, vf, '-f', 'null', '-'], cwd=scratch, capture_output=True,
+                               text=True, encoding='utf-8', errors='replace')
+            errors = p.stderr.lower()
+            render_error = 'failed rendering image!' in errors
+            if not p.returncode and not render_error:
+                break
+            if shader_cache and 'shader_cache' in errors and 'option not found' in errors:
+                shader_cache = False
+                continue
+            format_error = render_error or any(message in errors for message in
+                               ('unsupported format', 'not supported', 'invalid output format',
+                                'unknown pixel format', 'impossible to convert between the formats',
+                                'failed to configure output pad'))
+            if len(formats) == 1 or not format_error:
+                raise RuntimeError('Crop-Erkennung fehlgeschlagen: ' + p.stderr[-2000:])
+            formats.pop(0)
         found = re.findall(r'crop=(\d+):(\d+):(\d+):(\d+)', p.stderr)
         valid = []
         for item in found:
@@ -694,7 +928,8 @@ def evaluate(ffmpeg, ref, enc, fps, step, threads, hdr, root, log, limit=None, c
             filters+=backend[1] if backend else normalization(crop[key+'_kind'])
             decoder_envs.append(backend[2] if backend else None)
             renderer_audit.append(backend[3] if backend else {'mode':'classic','kind':crop[key+'_kind']})
-            filters+='crop='+':'.join(map(str,crop[key]))+','
+            output_crop = backend[3].get('output_crop',crop[key]) if backend else crop[key]
+            filters+='crop='+':'.join(map(str,output_crop))+','
             filters+=f'scale={width}:{height}:flags=bicubic,setsar=1,'
             filters+='zscale=p=bt2020:t=smpte2084:m=bt2020nc:r=limited,format=yuv420p16le'
             command=[backend[0] if backend else ffmpeg,'-hide_banner','-nostdin','-xerror','-v','warning',
@@ -710,9 +945,12 @@ def evaluate(ffmpeg, ref, enc, fps, step, threads, hdr, root, log, limit=None, c
             else:command+=['-map','0:V:0','-vf',trim+filters]
             command+=['-an','-sn','-dn','-fps_mode','passthrough','-pix_fmt','yuv420p16le','-f','rawvideo','pipe:1']
             commands.append(command)
+        vmaf_dv.balance_sparse_threads(crop,plan,decoder_envs,renderer_audit)
+        if not limit and any(x.get('mesa_thread_policy')=='asymmetric-25-windows' for x in renderer_audit):
+            print('Mesa-Lastverteilung: Referenz automatisch; kleinerer Encode mit 4 Render-Threads.',flush=True)
         crop['renderer_audit']=renderer_audit
-        if not limit and any(x['mode']=='optimized-cpu-dv-v1' for x in renderer_audit):
-            print('DV-Optimierung: P010/P016, Crop-ROI und begrenzter Farb-Schnellpfad; kleine Abweichungen zum klassischen Ablauf moeglich.',flush=True)
+        if not limit and any(x['mode'].startswith('optimized-cpu-dv-v') for x in renderer_audit):
+            print('DV-Optimierung: P010/P016, Crop mit Filterrand, Post-DV-Taps und begrenzter Farb-Schnellpfad; kleine Abweichungen zum klassischen Ablauf moeglich.',flush=True)
         return vmaf_hdr.evaluate(commands,width,height,threads,step,root,log,not limit,plan,decoder_envs)
     cmd = [ffmpeg, '-hide_banner', '-nostdin', '-xerror', '-v', 'warning', '-i', str(enc), '-i', str(ref),
            '-filter_complex', graph(fps, step, threads, hdr, limit, crop, display),
@@ -846,6 +1084,8 @@ def main():
         prefix = datetime.now().strftime('%Y-%m-%d_%H-%M-%S_')
     else:
         prefix = 'run-'
+    global DOWNLOAD_CACHE
+    DOWNLOAD_CACHE = work / 'Cache' / 'Downloads'
     args.temp_dir = args.temp_dir or work / 'Temp'
     args.output.mkdir(parents=True, exist_ok=True)
     output = Path(tempfile.mkdtemp(prefix=prefix, dir=args.output.resolve()))
@@ -858,7 +1098,7 @@ def main():
         if args.download_tools or not ffmpeg or not ffprobe:
             if args.no_download:
                 raise RuntimeError('FFmpeg/FFprobe fehlen und Downloads sind deaktiviert.')
-            ffmpeg, ffprobe = download_tools(root, manifest)
+            ffmpeg, ffprobe = download_tools(root, manifest, refresh=args.download_tools)
         info_ref, info_enc = probe(ffprobe, ref), probe(ffprobe, enc)
         original_info_ref, original_info_enc = info_ref, info_enc
         info_ref, info_enc = apply_colors(info_ref,ref_colors), apply_colors(info_enc,enc_colors)
@@ -884,6 +1124,8 @@ def main():
             ffmpeg,ffprobe = download_tools(root,manifest)
             check_tools()
         renderer=None
+        crop_cache = None
+        source_stamps = {}
         if 'dv' in kinds:
             try:
                 renderer=configure_cpu_vulkan(ffmpeg,root,manifest,args.no_download,args.vulkan_icd)
@@ -892,7 +1134,15 @@ def main():
                 ffmpeg,ffprobe=download_tools(root,manifest)
                 check_tools()
                 renderer=configure_cpu_vulkan(ffmpeg,root,manifest,args.no_download,args.vulkan_icd)
-            (output/'vulkan.log').write_text(renderer.pop('probe'),encoding='utf-8')
+            vulkan_log = renderer.pop('probe')
+            (output/'vulkan.log').write_text(vulkan_log,encoding='utf-8')
+            if args.crop == 'auto':
+                crop_cache = DVCropCache(work/'Cache'/'Crop', ffmpeg, ffprobe, renderer, vulkan_log, root)
+                for source in (original_ref, original_enc):
+                    try:
+                        source_stamps[source] = crop_source_stamp(source)
+                    except OSError:
+                        pass
         dovi = None
         mkvmerge=None
         if dv_comparison['profile7_conversion']:
@@ -916,8 +1166,12 @@ def main():
         for label,path,s in (('reference',ref,info_ref),('encoded',enc,info_enc)):
             if (dv_config(s) or {}).get('dv_profile') == 7:
                 dv_comparison[label+'_p7_sample'] = profile7_sample(ffprobe,path)
-        ref,info_ref,ref_preparation = prepare_dv(ffmpeg,ffprobe,ref,info_ref,dv_comparison['mode'],dovi,root,output,'reference',fps,mkvmerge)
-        enc,info_enc,enc_preparation = prepare_dv(ffmpeg,ffprobe,enc,info_enc,dv_comparison['mode'],dovi,root,output,'encoded',fps,mkvmerge)
+        auto_encode_crop = (args.crop == 'auto' and not args.crop_encode and
+                            abs(info_ref['width']/info_ref['height'] - info_enc['width']/info_enc['height']) >= .002)
+        ref,info_ref,ref_preparation = prepare_dv(ffmpeg,ffprobe,ref,info_ref,dv_comparison['mode'],dovi,root,output,'reference',fps,mkvmerge,
+                                                  fingerprint=crop_cache is not None)
+        enc,info_enc,enc_preparation = prepare_dv(ffmpeg,ffprobe,enc,info_enc,dv_comparison['mode'],dovi,root,output,'encoded',fps,mkvmerge,
+                                                  fingerprint=crop_cache is not None and auto_encode_crop)
         info_ref, info_enc = apply_colors(info_ref,ref_colors), apply_colors(info_enc,enc_colors)
         preparation = [p for p in (ref_preparation,enc_preparation) if p]
         kind, prepared_fps = validate_pair(info_ref,info_enc)
@@ -928,9 +1182,31 @@ def main():
         if info_ref['width'] < info_ref['height']:
             raise RuntimeError('Diese Film-Version setzt Querformat voraus.')
         crop, crop_info = None, {'method': 'none'}
+        def auto_crop(source, prepared, info, operation):
+            if crop_cache is None or classify(info) != 'dv':
+                return detect_crop(ffmpeg, ffprobe, prepared, info)
+            return crop_cache.detect(source, source_stamps.get(source), prepared, info,
+                                     operation, (dovi, mkvmerge))
+        encode_detection = None
         if args.crop == 'auto':
             print('Suche schwarze Balken an 7 Stellen der Referenz (bei Bedarf bis zu 13) ...', flush=True)
-            crop, crop_info = detect_crop(ffmpeg, ffprobe, ref, info_ref)
+            if auto_encode_crop and kinds == ['dv', 'dv'] and parallel_dv_crops(info_ref, info_enc):
+                print('Auto-Crop: Referenz und Encode werden parallel untersucht.', flush=True)
+                crop_cache.parallel = True
+                try:
+                    with ThreadPoolExecutor(max_workers=1) as pool:
+                        other = pool.submit(auto_crop, original_enc, enc, info_enc, enc_preparation)
+                        crop, crop_info = auto_crop(original_ref, ref, info_ref, ref_preparation)
+                        encode_detection = other.result()
+                except (MemoryError, RuntimeError) as exc:
+                    if not isinstance(exc, MemoryError) and not any(s in str(exc).lower() for s in (
+                            'out of memory','cannot allocate memory','out_of_host_memory','out_of_device_memory')):
+                        raise
+                    crop_cache.parallel = False
+                    print('Zu wenig freier Speicher fuer zwei Crop-Suchen. Pruefe die Spuren nacheinander.',flush=True)
+                    crop, crop_info = auto_crop(original_ref, ref, info_ref, ref_preparation)
+            else:
+                crop, crop_info = auto_crop(original_ref, ref, info_ref, ref_preparation)
             print('Auto-Crop Referenz:',crop or 'kein sicherer Ausschnitt',crop_info.get('reason',''),flush=True)
         elif args.crop != 'none':
             crop = parse_crop(args.crop, info_ref['width'], info_ref['height'])
@@ -938,8 +1214,8 @@ def main():
         crop_enc = None
         if args.crop_encode:
             crop_enc = parse_crop(args.crop_encode,info_enc['width'],info_enc['height'])
-        elif args.crop == 'auto' and abs(info_ref['width']/info_ref['height']-info_enc['width']/info_enc['height']) >= .002:
-            crop_enc, enc_crop_info = detect_crop(ffmpeg,ffprobe,enc,info_enc)
+        elif auto_encode_crop:
+            crop_enc, enc_crop_info = encode_detection or auto_crop(original_enc, enc, info_enc, enc_preparation)
             crop_info['encode_detection'] = enc_crop_info
             print('Auto-Crop Encode:',crop_enc or 'kein sicherer Ausschnitt',enc_crop_info.get('reason',''),flush=True)
         crop = geometry(info_ref,info_enc,crop,crop_enc)

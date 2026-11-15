@@ -179,6 +179,20 @@ def evaluate(commands,width,height,threads,step,root,log,progress,plan=None,deco
             if counts!=[plan['total_frames']]*2:
                 raise RuntimeError('HDR-Framezaehler widersprechen Metadaten: '+str(counts))
             Path(str(log)+'.sampling.json').write_text(json.dumps({**plan,'decoded_frames':counts},indent=2),encoding='utf-8')
+    except RuntimeError as exc:
+        failed=[]
+        for index,child in enumerate(children):
+            code=child.poll()
+            if code is None:
+                try:code=child.wait(timeout=0.1)
+                except subprocess.TimeoutExpired:continue
+            if code:
+                label=('Referenz-Decoder' if index==0 else 'Encode-Decoder' if index==1 else 'HDR-Worker')
+                failed.append(f'{label}: Exitcode {code} (0x{code & 0xffffffff:08x})')
+        if failed:
+            raise RuntimeError('HDR-Prozess abgebrochen: '+'; '.join(failed)+'. Siehe '+str(log)+
+                               ' und .decoder0/.decoder1.log. Urspruenglicher Fehler: '+str(exc)) from exc
+        raise
     except (BrokenPipeError,OSError) as exc:
         raise RuntimeError('HDR-Messkomponente/Decoder abgebrochen. Siehe '+str(log)) from exc
     finally:

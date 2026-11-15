@@ -1,6 +1,6 @@
 {
-  "colorspace.c": "8fd04afcb4c93fde1c14f885274641afa2edf49bf308ffd98358182c31d12a77",
-  "vf_libplacebo.c": "2af9668bf1bde602e6c8f71c131c197e0f801033f146fff9464ce7a102ec56da",
+  "colorspace.c": "63cc3709b4f48daa7336ea54489d624fa9ccf07c8c4ca99a709aacc4e5770fc2",
+  "vf_libplacebo.c": "697f5bbec2f1e16dffd6863af9279f8427a088417d09f5a33f853201093f1a7a",
   "linux-ffmpeg-config.mak": "2f44665c936d58ca0c77b38c5eee695276268057ec81c80a611cec89d8d160cf",
   "windows-ffmpeg-config.mak": "e8d17b63673cc991beb7025d9d9cbc30b70021544726806a9865c23377544021",
   "mesa-transport/build.py": "67ad0339fa9a6f69ac102e7271385683032b0663239ef4cf33ce835de4283f25",
@@ -29,5 +29,6 @@
   "upstream/ubuntu/glslang_15.1.0.orig.tar.gz": "4bdcd8cdb330313f0d4deed7be527b0ac1c115ff272e492853a6e98add61b4bc",
   "upstream/ubuntu/spirv-tools_2025.1~rc1-1~ubuntu0.24.04.2.dsc": "5a867e3faddd74f2b0abbf9d99fad7e71031c614dcbec6daeec071ccf3f398e9",
   "upstream/ubuntu/glslang_15.1.0-2~ubuntu0.24.04.2.debian.tar.xz": "4a1421f9f57bcf573236dfbdee520db44b9a55d2dd9935773b09fe192ca2d5e4",
-  "upstream/ubuntu/spirv-tools_2025.1~rc1.orig.tar.gz": "6895160d5a842552eda6412440747cbadddd47005957bc43bb03926162686777"
+  "upstream/ubuntu/spirv-tools_2025.1~rc1.orig.tar.gz": "6895160d5a842552eda6412440747cbadddd47005957bc43bb03926162686777",
+  "sampling.c": "3e0b57ee1cc6f94d3558069ed95f4b1bc9885bc6e1d0ddb654e2c30e7682e236"
 }

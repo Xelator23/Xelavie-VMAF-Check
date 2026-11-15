@@ -170,6 +170,8 @@ typedef struct LibplaceboContext {
     pl_tex tex[4];
     struct pl_custom_lut *lut;
 
+    AVFrame *repeat_input, *repeat_output;
+    unsigned repeat_hits;
     /* dedicated renderer for linear output composition */
     pl_renderer linear_rr;
     pl_tex linear_tex;
@@ -855,6 +857,10 @@ fail:
 static void libplacebo_uninit(AVFilterContext *avctx)
 {
     LibplaceboContext *s = avctx->priv;
+    av_frame_free(&s->repeat_input);
+    av_frame_free(&s->repeat_output);
+    if (getenv("XELAVIE_REPEAT_FRAMES"))
+        av_log(avctx, AV_LOG_INFO, "Identical rendered inputs reused: %u\n", s->repeat_hits);
 
     for (int i = 0; i < FF_ARRAY_ELEMS(s->tex); i++)
         pl_tex_destroy(s->gpu, &s->tex[i]);
@@ -1094,6 +1100,67 @@ static int set_output_props(LibplaceboContext *s, const AVFilterLink *outlink,
 }
 
 /* Construct and emit an output frame for a given timestamp */
+/* Operates only on the application's fixed P010 -> P016, single-frame pipeline. */
+static bool repeat_eligible(const LibplaceboContext *s, const AVFrame *src,
+                            const AVFrame *out)
+{
+    if (!src || !src->data[0] || !src->data[1] || src->hw_frames_ctx ||
+        src->format != AV_PIX_FMT_P010LE || out->format != AV_PIX_FMT_P016LE ||
+        s->nb_inputs != 1 || s->inputs[0].mix.num_frames != 1 || s->peakdetect ||
+        s->dithering >= 0 || s->deband || s->num_hooks || s->lut ||
+        src->flags & (AV_FRAME_FLAG_INTERLACED | AV_FRAME_FLAG_CORRUPT) ||
+        av_dict_count(src->metadata))
+        return false;
+    for (int i = 0; i < src->nb_side_data; i++) {
+        const AVFrameSideData *sd = src->side_data[i];
+        if (av_dict_count(sd->metadata))
+            return false;
+        switch (sd->type) {
+        case AV_FRAME_DATA_DOVI_RPU_BUFFER:
+        case AV_FRAME_DATA_DOVI_METADATA:
+        case AV_FRAME_DATA_DYNAMIC_HDR_PLUS:
+        case AV_FRAME_DATA_MASTERING_DISPLAY_METADATA:
+        case AV_FRAME_DATA_CONTENT_LIGHT_LEVEL:
+        case AV_FRAME_DATA_SEI_UNREGISTERED:
+            break;
+        default:
+            return false;
+        }
+    }
+    return true;
+}
+
+static bool repeat_equal(const AVFrame *a, const AVFrame *b)
+{
+    if (!b || a->width != b->width || a->height != b->height ||
+        a->format != b->format || a->color_range != b->color_range ||
+        a->color_primaries != b->color_primaries || a->color_trc != b->color_trc ||
+        a->colorspace != b->colorspace || a->chroma_location != b->chroma_location ||
+        a->alpha_mode != b->alpha_mode || a->flags != b->flags ||
+        a->sample_aspect_ratio.num != b->sample_aspect_ratio.num ||
+        a->sample_aspect_ratio.den != b->sample_aspect_ratio.den ||
+        a->crop_top != b->crop_top || a->crop_bottom != b->crop_bottom ||
+        a->crop_left != b->crop_left || a->crop_right != b->crop_right ||
+        a->nb_side_data != b->nb_side_data)
+        return false;
+    for (int i = 0; i < a->nb_side_data; i++) {
+        const AVFrameSideData *x = a->side_data[i], *y = b->side_data[i];
+        if (x->type != y->type || x->size != y->size ||
+            memcmp(x->data, y->data, x->size))
+            return false;
+    }
+    for (int p = 0; p < 2; p++) {
+        const int h = p ? (a->height + 1) / 2 : a->height;
+        const size_t bytes = p ? 4 * ((a->width + 1) / 2) : 2 * a->width;
+        for (int y = 0; y < h; y++) {
+            if (memcmp(a->data[p] + (ptrdiff_t)y*a->linesize[p],
+                       b->data[p] + (ptrdiff_t)y*b->linesize[p], bytes))
+                return false;
+        }
+    }
+    return true;
+}
+
 static int output_frame(AVFilterContext *ctx, int64_t pts)
 {
     int err = 0;
@@ -1148,6 +1215,16 @@ props_done:
     if (s->fps.num)
         out->duration = 1;
 
+    bool cache = getenv("XELAVIE_REPEAT_FRAMES") && repeat_eligible(s, ref, out);
+    if (cache && s->repeat_output && s->repeat_output->format == out->format &&
+        s->repeat_output->width == out->width && s->repeat_output->height == out->height &&
+        repeat_equal(ref, s->repeat_input)) {
+        RET(av_frame_copy(out, s->repeat_output));
+        s->repeat_hits++;
+        return ff_filter_frame(outlink, out);
+    }
+    av_frame_free(&s->repeat_input);
+    av_frame_free(&s->repeat_output);
     /* Map, render and unmap output frame */
     RET(map_output(s, out, &target));
 
@@ -1202,7 +1279,8 @@ props_done:
             target.color = source->color;
         }
 
-        pl_render_image_mix(in->renderer, &in->mix, &target, &tmp_params);
+        if (!pl_render_image_mix(in->renderer, &in->mix, &target, &tmp_params))
+            cache = false; /* A failed draw cannot seed the next picture. */
 
         /* Force straight output and set correct blend operator. This is
          * required to get correct blending onto YUV target buffers. */
@@ -1223,6 +1301,10 @@ props_done:
     }
 
     RET(unmap_output(s, &target, out));
+    if (cache) {
+        s->repeat_input = av_frame_clone(ref);
+        s->repeat_output = av_frame_clone(out);
+    }
     return ff_filter_frame(outlink, out);
 
 fail:

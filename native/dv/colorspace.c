@@ -169,6 +169,28 @@ void pl_shader_dovi_reshape(pl_shader sh, const struct pl_dovi_metadata *data)
         }
     }
 
+    // Keep both clamps. An identity segment evaluates exactly to its finite input.
+    bool identity = true;
+    for (int c = 0; c < 3 && identity; c++) {
+        const struct pl_reshape_data *comp = &data->comp[c];
+        if (comp->num_pivots < 2 || comp->num_pivots > 9) {
+            identity = false;
+            break;
+        }
+        for (int j = 0; j < comp->num_pivots - 1; j++) {
+            if (comp->method[j] != 0 || comp->poly_coeffs[j][0] != 0.0f ||
+                comp->poly_coeffs[j][1] != 1.0f || comp->poly_coeffs[j][2] != 0.0f) {
+                identity = false;
+                break;
+            }
+        }
+    }
+    if (identity) {
+        GLSL("color.rgb = clamp(clamp(color.rgb, "$", "$"), 0.0, 1.0); \n",
+             sh_var(sh, (struct pl_shader_var) {.var = pl_var_vec3("pivot_lo"), .data = lo}),
+             sh_var(sh, (struct pl_shader_var) {.var = pl_var_vec3("pivot_hi"), .data = hi}));
+        return;
+    }
     sh_describe(sh, "reshaping");
     GLSL("// pl_shader_reshape                  \n"
          "{                                     \n"

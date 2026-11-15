@@ -21,3 +21,6 @@ build/
 *.whl
 .DS_Store
 Thumbs.db
+
+!native/dv/test-fixtures/constant.mkv
+!native/dv/test-fixtures/changed.mkv

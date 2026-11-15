@@ -14,26 +14,18 @@ c=plsrc/'src/shaders/colorspace.c';f=ffsrc/'libavfilter/vf_libplacebo.c'
 orig=c.read_bytes();fforig=f.read_bytes();liborig=installed.read_bytes()
 config=ffbuild/'ffbuild/config.mak';configorig=config.read_bytes()
 def run(cmd,cwd=None):subprocess.run(list(map(str,cmd)),cwd=cwd,check=True)
+sources = Path(__file__).resolve().parent
+source_manifest = json.loads((sources/'SHA256.json').read_bytes())
+import hashlib
+sampling=plsrc/'src/shaders/sampling.c'
+original_sampling=sampling.read_bytes()
 try:
- code=orig.decode();anchor='    bool need_gamut_map = !pl_gamut_map_params_noop(&gamut);'
- assert code.count(anchor)==1
- diag=r'''
-    if (getenv("XELAVIE_MAP_DIAG")) {
-        PL_WARN(sh, "XELAVIE_MAP tone=%s in=%.9g,%.9g out=%.9g,%.9g exposure=%.9g gamut=%d mastering=%d clip=%.9g film=%.9g srcpeak=%.9g space=%d->%d prelinear=%d",
-            tone.function->name, tone.input_min, tone.input_max, tone.output_min, tone.output_max,
-            dt_exposure, need_gamut_map, use_mast_space, params->mastering_clip, params->film_strength,
-            args->src.hdr.max_luma, src.primaries, dst.primaries, args->prelinearized);
-    }
-'''
- code=code.replace(anchor,anchor+diag)
- patch=root/'shader-patch.json'
- if patch.exists():
-  for a,b in json.loads(patch.read_text()):assert code.count(a)==1,a;code=code.replace(a,b)
- c.write_text(code)
- ffcode=fforig.decode()
- if 'XELAVIE_NEUTRAL_TARGET' not in ffcode:
-  for a,b in json.loads((nr/'patch.json').read_text()):assert ffcode.count(a)==1;ffcode=ffcode.replace(a,b)
- f.write_text(ffcode)
+ for name,dest in [('colorspace.c',c),('sampling.c',sampling),('vf_libplacebo.c',f)]:
+  contents=(sources/name).read_bytes()
+  if hashlib.sha256(contents).hexdigest() != source_manifest[name]:
+   raise RuntimeError('Invalid pinned source: '+name)
+  dest.write_bytes(contents)
+ code=c.read_text()
  if not win:
   os.environ['PKG_CONFIG_PATH']='/build/ffmpeg-matched/install/lib/pkgconfig'
   if not (plbuild/'build.ninja').exists():
@@ -50,5 +42,6 @@ try:
  shutil.copy2(ffbuild/('ffmpeg.exe' if win else 'ffmpeg'),out/('ffmpeg.exe' if win else 'ffmpeg'))
  (out/'colorspace.c').write_text(code)
 finally:
+ sampling.write_bytes(original_sampling)
  c.write_bytes(orig);f.write_bytes(fforig);installed.write_bytes(liborig);config.write_bytes(configorig)
 print(platform+' DIAGNOSTIC READY',flush=True)

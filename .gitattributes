@@ -9,3 +9,6 @@
 *.ps1 text eol=crlf
 *.png binary
 bin/** -text
+
+native/dv/test-fixtures/*.mkv binary
+native/dv/*.c text eol=lf
